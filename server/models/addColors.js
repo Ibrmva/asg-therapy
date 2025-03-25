@@ -1,5 +1,5 @@
-const express = require('express');
-const Color = require('./colorModel'); // Import the Color model
+import express from 'express';
+import Color from './colorModel.js'; // Import the Color model
 
 const router = express.Router();
 
@@ -31,4 +31,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router; // Export the router

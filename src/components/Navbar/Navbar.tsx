@@ -22,11 +22,16 @@ const Navbar: React.FC = () => {
           <Link to="/">Home</Link>
         </li>
         <li className="navbar-item">
+          <Link to="/generate">Generate Image</Link>
+        </li>
+        <li className="navbar-item">
           <Link to="/tutorial">Tutorial</Link>
         </li>
         <li className="navbar-item">
           <Link to="/contact">Contact</Link>
         </li>
+
+
       </ul>
       <div className="navbar-language">
         <button onClick={toggleDropdown} className="language-toggle">

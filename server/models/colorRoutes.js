@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import Color from './colorModel.js';  // Importing Color model
+
 const router = express.Router();
-const Color = require('./colorModel'); // Your Color model
 
 // POST route to add a new color
 router.post('/add', async (req, res) => {
@@ -27,4 +28,4 @@ router.get('/', async (req, res) => {
     }
   });
 
-module.exports = router;
+export default router;  // Exporting router in ES module syntax

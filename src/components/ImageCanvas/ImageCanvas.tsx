@@ -26,8 +26,8 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
     useEffect(() => {
       if (fabricCanvasRef.current) {
         fabricCanvas.current = new fabric.Canvas(fabricCanvasRef.current, {
-          width: 900,
-          height: 750,
+          width: 800,
+          height: 650,
           backgroundColor: "#ffffff",
           preserveObjectStacking: true,
         });

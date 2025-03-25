@@ -12,7 +12,7 @@ import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import Search from "./components/Search/Search";
 import Editor from "./pages/Editor/Editor";
-
+import ImageGenerate from "./pages/Generate Image/ImageGenerate";
 const AppRoutes: React.FC = () => {
   const location = useLocation();
 
@@ -31,6 +31,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/tutorial" element={<Tutorial />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/editor" element={<Editor />} /> 
+        <Route path="/generate" element={<ImageGenerate />} />
       </Routes>
 
       {location.pathname !== "/editor" && <Footer />}

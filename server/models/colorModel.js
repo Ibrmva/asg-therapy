@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Create a schema for colors
 const colorSchema = new mongoose.Schema(
@@ -12,4 +12,4 @@ const colorSchema = new mongoose.Schema(
 // Create and export the Color model
 const Color = mongoose.model('Color', colorSchema);
 
-module.exports = Color;
+export default Color; // Exporting the Color model
