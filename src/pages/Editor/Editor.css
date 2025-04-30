@@ -9,24 +9,29 @@
 }
 
 .editor-sidebar {
-  top: 5rem;
+  position: absolute;
+  top: 3rem;
+  left: -100%; /* Hide it off-screen initially */
   width: 15%;
+  height: 100vh;
   background-color: #282727;
-  display: none;
+  display: flex;
   flex-direction: column;
   padding: 1rem;
-  height: calc(100vh - 5rem);
   color: white;
+  transition: left 0.3s ease-in-out; /* Smooth sliding */
+  z-index: 1000;
+  border-radius: 10px;
 }
 
 .editor-sidebar.show {
-  display: flex;
+  left: 0; /* Slide it in */
 }
 
 .hamburger-menu {
   top: 6rem;
   left: 1rem;
-  background-color: #282727;
+  color: #0f0f0f;
   width: 40px;
   height: 40px;
   border-radius: 5px;
@@ -37,6 +42,7 @@
   z-index: 1000;
   background-color: transparent;
   font-size: 1.5rem;
+  position: fixed;
 }
 
 .hamburger-menu:hover {
@@ -80,7 +86,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #3a3a3a;
+  background-color: white;
   padding: 1rem;
   width: 100%;
   height: 100%;
@@ -88,6 +94,7 @@
   max-height: 2000px;
   border-radius: 5px;
   box-sizing: border-box;
+  border: 1px dashed #cccccc;
 }
 
 .canvas-area {
@@ -97,7 +104,7 @@
   max-width: 2000px;
   max-height: 2000px;
   background-color: #ffffff;
-  border: 1px dashed #cccccc;
+  border: 2px dashed #cccccc;
   display: flex;
   justify-content: center;
   align-items: center;
