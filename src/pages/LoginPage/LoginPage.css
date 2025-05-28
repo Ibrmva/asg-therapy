@@ -1,0 +1,153 @@
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+  }
+  .login-title {
+    font-size: 1.25rem; /* Tailwind's text-xl */
+    font-weight: 700; /* Tailwind's font-bold */
+    line-height: 1.75rem; /* Tailwind's leading-tight */
+    letter-spacing: -0.015em; /* Tailwind's tracking-tight */
+    color: #1f2937; /* Tailwind's text-gray-900 */
+    text-align: center; /* Tailwind's text-center */
+  }
+  
+  @media (min-width: 768px) {
+    .login-title {
+      font-size: 1.5rem; /* Tailwind's md:text-2xl */
+    }
+  }
+  
+  .dark-mode .login-title {
+    color: #ffffff; /* Tailwind's dark:text-white */
+  }
+  
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #ffffff;
+    padding: 30px;
+    width: 350px;
+    border-radius: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+  
+  
+  ::placeholder {
+    font-family: inherit;
+    color: #a9a9a9;
+  }
+  
+  .form button {
+    align-self: flex-end;
+  }
+  
+  .flex-column {
+    color: #434343; /* Replace with your desired color */
+    font-size: 14px; /* Optional: Customize font size */
+  }
+
+
+.inputForm {
+  border: 1.5px solid #ecedec;
+  border-radius: 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  transition: 0.2s ease-in-out;
+  background-color: #ffffff; /* Ensure the container background is white */
+}
+
+.input {
+  margin-left: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 100%;
+  height: 100%;
+  outline: none; /* Removes default blue outline */
+  background-color: transparent; /* Ensure no blue background */
+}
+
+.input:focus {
+  outline: none;
+  background-color: transparent; /* Prevent any background on focus */
+}
+
+.inputForm:focus-within {
+  border: 1.5px solid #2d79f3; /* Highlight container border on focus */
+}
+
+/* Remove browser autofill background color (specific to Chrome, Edge) */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important; /* Force white background */
+  -webkit-text-fill-color: #000000 !important; /* Ensure text color remains black */
+  border-radius: 10px; /* Match the input's styling */
+}
+
+/* For Firefox Autofill */
+input:-moz-autofill {
+  box-shadow: 0 0 0px 1000px #ffffff inset !important; /* Force white background */
+  color: #000000 !important; /* Ensure text color remains black */
+}
+
+/* Prevent the autofill background when focusing the container */
+.inputForm input:autofill {
+  background-color: transparent;
+}
+
+  
+  .flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+  }
+  
+  .flex-row > .span {
+    font-size: 14px;
+    margin-left: 5px;
+    color: #2d79f3;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .button-submit {
+    margin: 20px 0 10px 0;
+    background-color: #151717;
+    border: none;
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    height: 50px;
+    width: 100%;
+    cursor: pointer;
+  }
+  
+  .button-submit:hover {
+    background-color: #252727;
+  }
+  
+  .p {
+    text-align: center;
+    color: black;
+    font-size: 14px;
+    margin: 5px 0;
+  }
+  
+  .error {
+    color: #ff4d4f; /* Bright red for visibility */
+    font-size: 12px; /* Smaller font size */
+    margin-top: 5px; /* Spacing from the input */
+    margin-bottom: 10px; /* Spacing before the next element */
+    font-weight: 500; /* Slightly bold for emphasis */
+    font-family: Arial, sans-serif; /* Optional: Set a clear, readable font */
+  }
+  

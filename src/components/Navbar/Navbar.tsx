@@ -31,6 +31,9 @@ const Navbar: React.FC = () => {
         <li className="navbar-item">
           <Link to="/contact">{t("navbar.contact")}</Link>
         </li>
+        <li className="navbar-item">
+          <Link to="/login">{t("navbar.login")}</Link>
+        </li>
       </ul>
       <div className="navbar-language">
         <button onClick={toggleDropdown} className="language-toggle">

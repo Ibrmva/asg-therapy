@@ -4,7 +4,8 @@
         "home": "HOME",
         "gen": "GENERATE IMAGE",
         "tut": "TUTORIAL",
-        "contact": "CONTACTS"
+        "contact": "CONTACTS",
+        "login": "LOGIN"
     },
     "home": {
         "sub": "Color / Art / Heal",

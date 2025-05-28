@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -18,6 +18,12 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import translationEN from "./locales/en/translation.json";
 import translationRU from "./locales/ru/translation.json";
+import { ToastContainer } from "react-toastify";
+import { UserProvider } from "./Context/useAuth";
+import "react-toastify/dist/ReactToastify.css";
+import LoginPage from "./pages/LoginPage/LoginPage";  
+import RegisterPage from "./pages/RegisterPage/RegisterPage";
+import ForgotPasswordpage from "./pages/ForgotPasswordpage/ForgotPasswordpage";
 
 i18n
   .use(LanguageDetector)
@@ -31,7 +37,7 @@ i18n
         translation: translationRU,
       },
     },
-    fallbackLng: "en", // Fallback language
+    fallbackLng: "en", 
     detection: {
       order: [
         "querystring",
@@ -45,7 +51,7 @@ i18n
       caches: ["localStorage", "cookie"],
     },
     interpolation: {
-      escapeValue: false, // Not needed for React
+      escapeValue: false, 
     },
   });
 
@@ -58,21 +64,22 @@ const AppRoutes: React.FC = () => {
 
   return (
     <>
+    <UserProvider>
       <Navbar />
-
-      {/* {isHomepage && (
-        <Search onSearch={(term) => alert(`Searching for: ${term}`)} />
-      )} */}
-
-      <Routes>
-        <Route path="/" element={<Homepage />} />
-        <Route path="/tutorial" element={<Tutorial />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/editor" element={<Editor />} /> 
-        <Route path="/generate" element={<ImageGenerate />} />
-      </Routes>
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/tutorial" element={<Tutorial />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/editor" element={<Editor />} />
+          <Route path="/generate" element={<ImageGenerate />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<RegisterPage />} />
+          <Route path="/resetpassword" element={<ForgotPasswordpage />} />
+        </Routes>
+      </Suspense>
       {location.pathname !== "/editor" && <Footer />}
+    </UserProvider>
     </>
   );
 };
