@@ -1,42 +1,63 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import path from 'path';
 import OpenAI from 'openai';
 import potrace from 'potrace';
 import sharp from 'sharp';
 import { kmeans } from 'ml-kmeans';
 import fileUpload from 'express-fileupload';
 import vtracer from 'vtracer';
-import authRoutes from './routes/auth.route.js';
+import authRoutes from './routes/authRoutes.js';
+import { connectDB } from './db/connectDB.js';
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 4000;
+const __dirname = path.resolve();
 
-
-// CORS options
+// Middleware configuration
 const corsOptions = {
   origin: 'http://localhost:5173',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));  // Parse large JSON payloads
-app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } }));  // Adjust file upload size limit
+app.use(express.json({ limit: '50mb' })); // Parse large JSON payloads
+app.use(cookieParser()); // Parse cookies
+app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } })); // Adjust file upload size limit
 
+// Routes
 app.use('/api/auth', authRoutes);
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '/frontend/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'));
+  });
+}
+
+// OpenAI Configuration
 if (!process.env.VITE_OPENAI_API_KEY) {
   console.error('Error: OPENAI_API_KEY is not defined in the .env file');
   process.exit(1);
 }
-
 const openai = new OpenAI({
   apiKey: process.env.VITE_OPENAI_API_KEY,
 });
 
-// Extract dominant colors from the image
+// MongoDB Configuration
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('Error: MongoDB connection URI environment variable is not set.');
+  process.exit(1);
+}
+
+// Helper functions
 const extractDominantColors = async (imgBuffer, numColors = 24) => {
   try {
     const resizedImage = await sharp(imgBuffer)
@@ -65,13 +86,8 @@ const extractDominantColors = async (imgBuffer, numColors = 24) => {
   }
 };
 
-// Vectorize image using vtracer or potrace as fallback
 const vectorizeImage = async (imgBuffer) => {
   try {
-    if (!vtracer) {
-      throw new Error('vtracer is not defined');
-    }
-
     const svg = await vtracer({
       input: imgBuffer,
       colorPrecision: 12,
@@ -100,7 +116,6 @@ const vectorizeImage = async (imgBuffer) => {
               .toFormat('png')
               .flatten({ background: { r: 255, g: 255, b: 255 } })
               .toBuffer();
-
             resolve(pngBuffer);
           } catch (svgError) {
             reject(new Error('Failed to convert SVG to PNG'));
@@ -111,7 +126,7 @@ const vectorizeImage = async (imgBuffer) => {
   }
 };
 
-// Image segmentation endpoint
+// Routes for image segmentation and generation
 app.post('/segmentImage', async (req, res) => {
   try {
     if (!req.files || !req.files.image) {
@@ -141,32 +156,25 @@ app.post('/segmentImage', async (req, res) => {
       processedImage = pngBuffer;
     } else {
       const numColors = parseInt(colorOption, 10);
-
       if (numColors === 12 || numColors === 24) {
         const dominantColors = await extractDominantColors(pngBuffer, numColors);
         const rawImage = await sharp(pngBuffer).raw().toBuffer();
         const segmentedPixels = [];
-
         for (let i = 0; i < rawImage.length; i += 3) {
           const [r, g, b] = [rawImage[i], rawImage[i + 1], rawImage[i + 2]];
-
           const closestColor = dominantColors.reduce((prev, curr) => {
             const prevDist = Math.sqrt(Math.pow(prev[0] - r, 2) + Math.pow(prev[1] - g, 2) + Math.pow(prev[2] - b, 2));
             const currDist = Math.sqrt(Math.pow(curr[0] - r, 2) + Math.pow(curr[1] - g, 2) + Math.pow(curr[2] - b, 2));
             return prevDist < currDist ? prev : curr;
           });
-
           segmentedPixels.push(...closestColor.map(Math.round));
         }
-
         const { width, height } = await sharp(pngBuffer).metadata();
-
         processedImage = await sharp(Buffer.from(segmentedPixels), { raw: { width, height, channels: 3 } })
           .toFormat('png')
           .toBuffer();
       }
     }
-
     res.status(200).json({ image: processedImage.toString('base64') });
   } catch (error) {
     console.error('Error segmenting image:', error.message);
@@ -174,22 +182,17 @@ app.post('/segmentImage', async (req, res) => {
   }
 });
 
-// Generate image endpoint (DALL-E)
 app.post('/generateImage', async (req, res) => {
   const { prompt, height, width } = req.body;
-
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: "Invalid or missing 'prompt' in request body" });
   }
-
   if (!height || isNaN(height) || height <= 0) {
     return res.status(400).json({ error: "Invalid 'height' in request body" });
   }
-
   if (!width || isNaN(width) || width <= 0) {
     return res.status(400).json({ error: "Invalid 'width' in request body" });
   }
-
   try {
     const image = await openai.images.generate({
       prompt,
@@ -198,7 +201,6 @@ app.post('/generateImage', async (req, res) => {
       size: `${width}x${height}`,
       response_format: 'b64_json',
     });
-
     res.status(200).json({ image: image.data[0].b64_json });
   } catch (error) {
     console.error('Error generating image:', error.message);
@@ -212,8 +214,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
-// Start the server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Connect to MongoDB and start the server
+connectDB(mongoUri).then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}).catch((error) => {
+  console.error('Error connecting to MongoDB:', error);
+  process.exit(1);
 });
