@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import "./Tutorial.css";
 import { useTranslation } from "react-i18next";
+import Loader from "../../components/Loader/Loader";
 
 const Tutorial: React.FC = () => {
   const { t } = useTranslation();
@@ -40,27 +41,34 @@ const Tutorial: React.FC = () => {
   };
 
   return (
-    <div style={{ backgroundColor: "#E5E3E3", padding: "2rem 0" }}>
-      <div className="tutorial-container">
-        <h1 className="tutorial-title">{t("tutorial.title")}</h1>
-        <div className="tutorial-steps">
-          {steps.map((step, index) => (
-            <div
-              key={index}
-              className={`tutorial-step ${activeIndex === index ? "active" : ""}`}
-              onClick={() => toggleStep(index)}
-            >
-              <div className="step-header">
-                <h2>{step.title}</h2>
-                {activeIndex === index ? <FaChevronUp /> : <FaChevronDown />}
-              </div>
-              {activeIndex === index && (
-                <div className="step-content">
-                  <p>{step.content}</p>
+    <div style={{ backgroundColor: "#0f0f0f", padding: "0 3rem" }}>
+      <div className="tutorial-layout">
+        <div className="tutorial-loader">
+          <Loader />
+        </div>
+        <div className="tutorial-main">
+          <h1 className="tutorial-title">{t("tutorial.title")}</h1>
+          <div className="tutorial-steps">
+            {steps.map((step, index) => (
+              <div
+                key={index}
+                className={`tutorial-step ${
+                  activeIndex === index ? "active" : ""
+                }`}
+                onClick={() => toggleStep(index)}
+              >
+                <div className="step-header">
+                  <h2>{step.title}</h2>
+                  {activeIndex === index ? "✕" : "↓"}
                 </div>
-              )}
-            </div>
-          ))}
+                {activeIndex === index && (
+                  <div className="step-content">
+                    <p>{step.content}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React from "react";
 import "./Footer.css";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Card from "../ContactCard/ContactCard";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
@@ -18,10 +19,11 @@ const Footer: React.FC = () => {
         <li className="footer-item">
           <Link to="/tutorial">{t("footer.tut")}</Link>
         </li>
-        <li className="footer-item">
+        {/* <li className="footer-item">
           <Link to="/contact">{t("footer.contact")}</Link>
-        </li>
+        </li> */}
       </ul>
+      <Card/>
       <p className="footer-credits">
         © 2025 ASG Therapy. All rights reserved.
       </p>

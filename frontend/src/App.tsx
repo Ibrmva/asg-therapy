@@ -70,7 +70,7 @@ const AppRoutes: React.FC = () => {
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/tutorial" element={<Tutorial />} />
-          <Route path="/contact" element={<Contact />} />
+          {/* <Route path="/contact" element={<Contact />} /> */}
           <Route path="/editor" element={<Editor />} />
           <Route path="/generate" element={<ImageGenerate />} />
           <Route path="/login" element={<LoginPage />} />
