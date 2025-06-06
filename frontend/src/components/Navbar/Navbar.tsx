@@ -28,9 +28,9 @@ const Navbar: React.FC = () => {
         <li className="navbar-item">
           <Link to="/tutorial">{t("navbar.tut")}</Link>
         </li>
-        <li className="navbar-item">
+        {/* <li className="navbar-item">
           <Link to="/contact">{t("navbar.contact")}</Link>
-        </li>
+        </li> */}
         <li className="navbar-item">
           <Link to="/login">{t("navbar.login")}</Link>
         </li>

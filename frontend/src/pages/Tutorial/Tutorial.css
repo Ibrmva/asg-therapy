@@ -1,66 +1,53 @@
-.tutorial-container {
-  max-width: 800px;
-  margin: 1.5rem auto;
-  background: #fff9f9;
-  border-radius: 15px;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 10px 20px rgba(255, 111, 145, 0.15);
-  font-family: 'Montserrat', sans-serif;
-  color: #5a3e3e;
+.tutorial-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 3rem 5rem;
+  flex-wrap: wrap;
 }
 
 .tutorial-title {
-  text-align: center;
-  color: #282727;
-  margin-bottom: 2rem;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 700;
-  font-size: 1.6rem; /* smaller */
+}
+
+.tutorial-loader {
+  flex: 1 1 40%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 2rem;
+}
+
+.tutorial-main {
+  flex: 1 1 50%;
+  color: #e0e9ff;
+  padding-left: 5rem;
+  padding-top: 1rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .tutorial-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.tutorial-step {
-  background: #fff0f5;
-  border-radius: 12px;
-  cursor: pointer;
-  padding: 0.8rem 1.2rem;
-  box-shadow: 0 4px 12px rgba(255, 111, 145, 0.1);
-  transition: background-color 0.3s ease;
-}
-
-.tutorial-step:hover {
-  background-color: #ffdce1;
+  font-weight: 400;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .step-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  font-size: 1rem; /* smaller */
-  color: #b7385b;
+  cursor: pointer;
 }
 
-.step-content {
-  margin-top: 0.6rem;
-  font-size: 0.9rem; /* smaller */
-  color: #4b2c3d;
-  line-height: 1.4;
-  animation: fadeIn 0.3s ease forwards;
-}
-
-/* Smooth fade-in */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
+@media (max-width: 768px) {
+  .tutorial-layout {
+    flex-direction: column;
+    align-items: center;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .tutorial-loader,
+  .tutorial-main {
+    flex: 1 1 100%;
+    width: 100%;
+    padding-left: 1rem;
   }
 }
