@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './ImageGenerate.css';
 import { assets } from '../../assets/assets';
+import { useTranslation } from "react-i18next";
 
 const ImageGenerate: React.FC = () => {
     const [prompt, setPrompt] = useState<string>('');
@@ -10,6 +11,7 @@ const ImageGenerate: React.FC = () => {
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string>('1024x1024');
     const [selectedColorOption, setSelectedColorOption] = useState<string>('none');
+    const { t } = useTranslation();
 
     const handleGenerateImage = async () => {
         if (!prompt.trim()) {
@@ -145,7 +147,7 @@ const ImageGenerate: React.FC = () => {
                 <div className='generate-box'>
                     <textarea
                         className="prompt-input"
-                        placeholder="Enter your prompt here..."
+                        placeholder={t("generate.ph")}
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         rows={2}
@@ -172,7 +174,7 @@ const ImageGenerate: React.FC = () => {
                         onClick={handleGenerateImage}
                         disabled={isLoading}
                     >
-                        {isLoading ? "Generating..." : "Generate Image"}
+                        {isLoading ? t("generate.loading") : t("generate.generate")}
                     </button>
 
                 </div>
@@ -182,17 +184,17 @@ const ImageGenerate: React.FC = () => {
                         value={selectedColorOption}
                         onChange={(e) => setSelectedColorOption(e.target.value)}
                     >
-                        <option value="none">Choose</option>
-                        <option value="vector">vector</option>
-                        <option value="12">12 Colors</option>
-                        <option value="24">24 Colors</option>
+                        <option value="none">{t("generate.choose")}</option>
+                        <option value="vector">{t("generate.vector")}</option>
+                        <option value="12">{t("generate.12")}</option>
+                        <option value="24">{t("generate.24")}</option>
                     </select>
                     <button
                         className="segment-btn"
                         onClick={handleSegmentImage}
                         disabled={isSegmentLoading || (!uploadedImage && !generatedImage)}
                     >
-                        {isSegmentLoading ? "Segmenting..." : "Segment"}
+                        {isSegmentLoading ? t("generate.loading2") : t("generate.segment")}
                     </button>
                 </div>
                 <input
@@ -317,9 +319,9 @@ const ImageGenerate: React.FC = () => {
             </div>
             {/* <p>If you uploaded your own image, please download it after segmentation to view the result.</p> */}
             <p>
-                <li>If you uploaded your own image, please download it after segmentation to view the result.</li>
-                <li>Avoid using shorthand, abbreviations, or unclear text in your requests.</li>
-                <li>The system may misinterpret or reject prompts that are too short, vague, or contain abbreviations that lack context.</li>
+                <li>{t("generate.li1")}</li>
+                <li>{t("generate.li2")}</li>
+                <li>{t("generate.li3")}</li>
             </p>
 
         

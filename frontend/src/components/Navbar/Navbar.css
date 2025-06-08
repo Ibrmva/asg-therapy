@@ -1,15 +1,15 @@
 .navbar {
   display: flex;
+  justify-content: center;  /* Center .navbar-container */
   align-items: center;
-  justify-content: space-between; /* Adjust alignment for items */
   padding: 1rem 2rem;
-  text-align: center;
   background-color: #0f0f0f;
   color: white;
-  position: relative;
-  font-family: 'Montserrat', sans-serif;  
+  font-family: 'Montserrat', sans-serif;
   font-weight: 400;
+  margin: 0;
 }
+
 
 .navbar-container {
   max-width: 1000px;

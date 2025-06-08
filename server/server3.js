@@ -25,7 +25,6 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));  // Parse large JSON payloads
 app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } }));  // Adjust file upload size limit
 
-app.use('/api/auth', authRouter);
 
 if (!process.env.VITE_OPENAI_API_KEY) {
   console.error('Error: OPENAI_API_KEY is not defined in the .env file');

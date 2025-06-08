@@ -8,12 +8,12 @@
     cursor: pointer;
     text-transform: uppercase;
     background-color: #0f0f0f;
-    color: #fff5f0; /* Very light peach */
+    color: #f5ebfa;
     font-weight: 600;
     transition: 0.6s;
-    box-shadow: 0px 0px 60px #d67e5b; /* Warm terracotta shadow */
+    box-shadow: 0px 0px 60px #e8cdf6;
     -webkit-box-reflect: below 10px
-      linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(74, 42, 26, 0.4)); /* Brown-tinted reflection */
+      linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(59, 26, 74, 0.4));
   }
 
   .btn:active {
@@ -21,11 +21,12 @@
   }
 
   .btn:hover {
-    background: #4a2a1a; /* Deep warm brown */
+    background: #0f0f0f;
     background: linear-gradient(
       270deg,
-      #8c4a36 0%, /* Rich terracotta */
-      #ffd8c5 60% /* Primary peach color */
+      #864ea2 0%,
+      #efd7fa 60% 
     );
-    color: #2e1a10; /* Very dark brown */
+    color: #0f0f0f;
   }
+  

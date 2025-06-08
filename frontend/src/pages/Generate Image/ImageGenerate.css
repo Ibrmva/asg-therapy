@@ -14,7 +14,7 @@ body {
     align-items: center; 
     justify-content: center; 
     width: 1396px;
-    height: 750px;
+    height: 800px;
     margin: 20px auto;
     background: #0f0f0f;
     /* border: 2px solid #040404; */
@@ -94,6 +94,11 @@ body {
     font-weight: 300;
     font-size: 16px;
     padding: 20px 139px;
+    white-space: pre-line;
+    text-indent: -1.5em; 
+    padding-left: 10.5em; 
+    line-height: 1;  
+
 }
 
 .image-generator-container li {

@@ -9,7 +9,9 @@
   justify-content: center;
   display: flex;
   flex-direction: column;
+
 }
+
 
 .footer-links {
   list-style: none;

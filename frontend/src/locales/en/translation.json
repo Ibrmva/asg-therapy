@@ -62,5 +62,19 @@
         "show": "Show Grid",
         "lock": "Lock Frame",
         "edit": "Edit Frame"
+    },
+    "generate": {
+        "ph": "Enter your prompt here...",
+        "generate": "Generate Image",
+        "loading": "Generating...",
+        "choose": "Choose",
+        "vector": "vector",
+        "12": "12 Colors",
+        "24": "24 Colors",
+        "segment": "Segment",
+        "loading2": "Segmenting...",
+        "li1": "If you uploaded your own image, please download it after segmentation to view the result.",
+        "li2": "Avoid using shorthand, abbreviations, or unclear text in your requests.",
+        "li3": "The system may misinterpret or reject prompts that are too short, vague, or contain abbreviations that lack context."
     }
 }
