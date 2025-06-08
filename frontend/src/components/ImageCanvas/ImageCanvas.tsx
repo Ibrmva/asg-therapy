@@ -548,6 +548,7 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
     };
 
     // Generate numbers for each color region
+    // Generate numbers for each color region
     const generateNumbersForRegions = (
       regions: Array<{ color: string; points: Array<{ x: number; y: number }> }>
     ) => {
@@ -563,17 +564,22 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       );
 
       sortedRegions.forEach((region, index) => {
-        // Calculate centroid of the region
-        let sumX = 0;
-        let sumY = 0;
+        // Calculate the bounding box of the region
+        let minX = Infinity,
+          maxX = -Infinity,
+          minY = Infinity,
+          maxY = -Infinity;
 
         region.points.forEach((point) => {
-          sumX += point.x;
-          sumY += point.y;
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+          minY = Math.min(minY, point.y);
+          maxY = Math.max(maxY, point.y);
         });
 
-        const centerX = sumX / region.points.length;
-        const centerY = sumY / region.points.length;
+        // Calculate the center of the bounding box
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
 
         // Find the point in the region closest to the center
         let bestPoint = region.points[0];
@@ -589,22 +595,25 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           }
         }
 
-        positions.push({
-          x: bestPoint.x,
-          y: bestPoint.y,
-          number: index + 1,
-        });
+        // Only add if the region is large enough
+        if (region.points.length > 100) {
+          // Adjust threshold as needed
+          positions.push({
+            x: bestPoint.x,
+            y: bestPoint.y,
+            number: index + 1,
+          });
+        }
       });
 
       if (onNumbersGenerated) {
         onNumbersGenerated(positions);
       }
 
-      // Update the canvas with new numbers
       addNumbersToCanvas();
     };
 
-    // Add numbers to canvas with background for visibility
+    // Add numbers to canvas with better visibility
     const addNumbersToCanvas = () => {
       if (!fabricCanvas.current || !mainImageRef.current) return;
 
@@ -621,56 +630,64 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       const img = mainImageRef.current;
       const imgLeft = img.left || 0;
       const imgTop = img.top || 0;
-      const imgWidth = (img.width || 0) * (img.scaleX || 1);
-      const imgHeight = (img.height || 0) * (img.scaleY || 1);
+      const imgScaleX = img.scaleX || 1;
+      const imgScaleY = img.scaleY || 1;
       const originalWidth = img.getOriginalSize().width;
       const originalHeight = img.getOriginalSize().height;
 
       numberPositions.forEach((pos) => {
         // Convert position from original image coordinates to canvas coordinates
-        const xPercent = pos.x / originalWidth;
-        const yPercent = pos.y / originalHeight;
+        const x =
+          imgLeft + (pos.x / originalWidth) * (img.width || 0) * imgScaleX;
+        const y =
+          imgTop + (pos.y / originalHeight) * (img.height || 0) * imgScaleY;
 
-        const x = imgLeft + xPercent * imgWidth;
-        const y = imgTop + yPercent * imgHeight;
+        const text = new fabric.Text(pos.number.toString(), {
+          left: x,
+          top: y,
+          fontSize: 14,
+          fill: "black",
+          fontFamily: "Arial",
+          fontWeight: "bold",
+          originX: "center",
+          originY: "center",
+          selectable: false,
+          evented: false,
+        });
 
-        // Check if position is within image bounds
-        const isInsideImage =
-          x >= imgLeft &&
-          x <= imgLeft + imgWidth &&
-          y >= imgTop &&
-          y <= imgTop + imgHeight;
+        fabricCanvas.current?.add(text);
+        text.bringToFront();
+      });
+    };
 
-        if (isInsideImage) {
-          // const bg = new fabric.Circle({
-          //   left: x,
-          //   top: y,
-          //   radius: 10,
-          //   fill: 'white',
-          //   opacity: 0.7,
-          //   originX: 'center',
-          //   originY: 'center',
-          //   selectable: false,
-          //   evented: false,
-          //   name: 'number-bg'
-          // });
+    // Debug function to visualize regions
+    const visualizeRegions = (regions: typeof colorRegions) => {
+      if (!fabricCanvas.current) return;
 
-          const text = new fabric.Text(pos.number.toString(), {
-            left: x,
-            top: y,
-            fontSize: 12,
-            fill: "black",
-            fontFamily: "Arial",
-            fontWeight: "bold",
-            originX: "center",
-            originY: "center",
+      // Clear previous debug visuals
+      fabricCanvas.current
+        .getObjects()
+        .filter((obj) => obj.name === "region-debug")
+        .forEach((obj) => fabricCanvas.current?.remove(obj));
+
+      regions.forEach((region) => {
+        // Create a polygon for the region (simplified)
+        const points = region.points
+          .filter((_, i) => i % 10 === 0) // Sample points to reduce complexity
+          .map((p) => ({ x: p.x, y: p.y }));
+
+        if (points.length > 2) {
+          const poly = new fabric.Polygon(points, {
+            fill: region.color + "80", // Semi-transparent
+            stroke: "red",
+            strokeWidth: 1,
             selectable: false,
             evented: false,
+            name: "region-debug",
+            opacity: 0.5,
           });
-
-          // fabricCanvas.current?.add(bg);
-          fabricCanvas.current?.add(text);
-          text.bringToFront();
+          fabricCanvas.current?.add(poly);
+          poly.sendToBack();
         }
       });
     };

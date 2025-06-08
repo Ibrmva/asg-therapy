@@ -3,6 +3,8 @@ import "./Homepage.css";
 import homepageImage from "../../assets/homepage.webp";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Button from "../../components/Button/Button";
+import TitleText from "../../components/TitleText/TitleText";
 
 const Homepage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,14 +16,14 @@ const Homepage: React.FC = () => {
   return (
     <div className="homepage-container">
       <div className="homepage-text">
-        <h1 className="homepage-title">ASG Therapy:</h1>
+        {/* <h1 className="homepage-title">ASG Therapy:</h1> */}
+        < TitleText />
+        {/* < Loader/> */}
         <h2 className="homepage-subtitle">{t("home.sub")}</h2>
-        <p className="homepage-description">
-          {t("home.text")}
-        </p>
-        <div className="homepage-button">
+        <p className="homepage-description">{t("home.text")}</p>
+        <div className="button">
           <button className="button-start" onClick={handleStartProject}>
-            {t("home.button")}
+            <Button />
           </button>
         </div>
       </div>

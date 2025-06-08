@@ -1,136 +1,199 @@
 import React, { useState, useRef } from "react";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useForm } from "react-hook-form";  
+import { useAppContext } from "../../Context/AppContext";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./ForgotPasswordpage.css";
+import axios from "axios";
+import e from "express";
 
-type Props = {};
 
-type EmailInput = {
+
+type ForgotPasswordInputs = {
   email: string;
 };
 
-type PasswordInput = {
-  password: string;
-  confirmPassword: string;
-};
+type FormStep = "email" | "otp" | "reset";
 
-const emailValidation = Yup.object().shape({
-  email: Yup.string().email("Invalid email address").required("Email is required*"),
+const validationSchema = Yup.object().shape({
+  email: Yup.string().email("Invalid email format").required("Email is required"),
 });
 
-const passwordValidation = Yup.object().shape({
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/[^a-zA-Z0-9]/, "Password must contain at least one special character")
-    .required("Password is required*"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords must match")
-    .required("Confirm Password is required*"),
-});
+const OTP_LENGTH = 6;
+const PASSWORD_MIN_LENGTH = 8;
 
-
-const ForgotPasswordPage = (props: Props) => {
+const ForgotPassword = () => {
+  const { sendPasswordResetOtp, verifyPasswordResetOtp, resetPassword } = useAppContext();
   const navigate = useNavigate();
-
-  const [step, setStep] = useState<"email" | "otp" | "changePassword" | "success">("email");
-  const [userEmail, setUserEmail] = useState("");
-
-  // Email form
   const {
-    register: registerEmail,
-    handleSubmit: handleSubmitEmail,
-    formState: { errors: emailErrors },
-  } = useForm<EmailInput>({ resolver: yupResolver(emailValidation) });
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordInputs>({ resolver: yupResolver(validationSchema) });
 
-  // OTP state
-  const [otpValues, setOtpValues] = useState<string[]>(["", "", "", "", "", ""]);
+  const [step, setStep] = useState<FormStep>("email");
+  const [userEmail, setUserEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [otpValues, setOtpValues] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentError, setCurrentError] = useState<string | null>(null);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Password form for new password step
-  const {
-    register: registerPassword,
-    handleSubmit: handleSubmitPassword,
-    formState: { errors: passwordErrors },
-  } = useForm<PasswordInput>({ resolver: yupResolver(passwordValidation) });
+  const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword((prev) => !prev);
+
+  const handleSendOtp = async (form: ForgotPasswordInputs) => {
+    setLoading(true);
+    try {
+      await sendPasswordResetOtp(form.email);
+      setUserEmail(form.email);
+      setStep("otp");
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
-
+    
     const newOtpValues = [...otpValues];
     newOtpValues[index] = value.slice(-1);
     setOtpValues(newOtpValues);
 
-    if (value && index < 5) {
+    if (value && index < OTP_LENGTH - 1) {
       otpRefs.current[index + 1]?.focus();
     }
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !otpValues[index] && index > 0) {
+      const newOtpValues = [...otpValues];
+      newOtpValues[index - 1] = "";
+      setOtpValues(newOtpValues);
       otpRefs.current[index - 1]?.focus();
     }
   };
 
-  const onSendOtp = (data: EmailInput) => {
-    console.log("Sending OTP to:", data.email);
-    setUserEmail(data.email);
-    // TODO: Call API to send OTP
-    setStep("otp");
-  };
-
-  const onVerifyOtp = () => {
+  const onVerifyOtp = async () => {
     const otp = otpValues.join("");
-    if (otp.length < 6) {
-      alert("Please enter all 6 digits of OTP");
+    if (otp.length < OTP_LENGTH) {
+      setCurrentError("Please enter the complete OTP");
       return;
     }
-    console.log("Verifying OTP:", otp, "for email:", userEmail);
-    // TODO: Call API to verify OTP
-    setStep("changePassword");  // <-- go to password step instead of success
+
+    setLoading(true);
+    try {
+      const verificationResult = await verifyPasswordResetOtp(userEmail, otp);
+      if (verificationResult?.success) {
+        setStep("reset");
+      } else {
+        setOtpValues(Array(OTP_LENGTH).fill(""));
+        setCurrentError("Invalid OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      setOtpValues(Array(OTP_LENGTH).fill(""));
+      setCurrentError("Error verifying OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onChangePassword = (data: PasswordInput) => {
-    console.log("Changing password for", userEmail, data.password);
-    // TODO: Call API to change password
+  const handlePasswordReset = async () => {
+    setCurrentError(null);
 
-    // On success:
-    setStep("success");
-  };
+    if (newPassword !== confirmNewPassword) {
+      setCurrentError("Passwords don't match");
+      return;
+    }
 
-  const onOk = () => {
-    alert("Password changed successfully! You can now log in.");
-    navigate("/login");
+    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+      setCurrentError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      setCurrentError("Password must contain at least one lowercase letter");
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      setCurrentError("Password must contain at least one uppercase letter");
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      setCurrentError("Password must contain at least one number");
+      return;
+    }
+
+    if (!/[^a-zA-Z0-9]/.test(newPassword)) {
+      setCurrentError("Password must contain at least one special character");
+      return;
+    }
+
+    setLoading(true);
+      try {
+          const otp = otpValues.join("");
+          const result = await resetPassword(userEmail, otp, newPassword);
+          
+          if (result.success) {
+            navigate("/login");
+          } else {
+            setCurrentError("Failed to reset password. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error resetting password:", error);
+          setCurrentError("Failed to reset password. Please try again.");
+        } finally {
+          setLoading(false);
+        } 
   };
 
   return (
-    <div className="form-container">
+    <div className="forgot-password-container">
       {step === "email" && (
-        <form className="form" onSubmit={handleSubmitEmail(onSendOtp)}>
-          <h1 className="reset-title">Forgot Password</h1>
-          <label className="flex-column">E-mail</label>
-          <div className="inputForm">
+        <form className="forgot-password-form" onSubmit={handleSubmit(handleSendOtp)}>
+          <h1 className="forgot-password-title">Forgot Password</h1>
+          
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email</label>
             <input
               type="email"
-              placeholder="Enter your email"
-              {...registerEmail("email")}
-              className="input"
+              id="email"
+              className={`form-input ${errors.email ? "input-error" : ""}`}
+              placeholder="your@email.com"
+              {...register("email")}
+              aria-invalid={!!errors.email}
+              aria-describedby="email-error"
             />
+            {/* {errors.email && (
+              <p id="email-error" className="error-message">
+                {errors.email.message}
+              </p>
+            )} */}
           </div>
-          {emailErrors.email && <p className="error">{emailErrors.email.message}</p>}
-          <button type="submit" className="button-submit">
-            Get OTP
+
+          <button
+            type="submit"
+            className="submit-button"
+            disabled={loading}
+            aria-busy={loading}
+          >
+            {loading ? "Sending OTP..." : "Send OTP"}
           </button>
-          <p className="p auth-links">
-            <a href="/register" className="auth-link">
-              Sign up
-            </a>
-            {" | "}
-            <a href="/login" className="auth-link">
-              Login
+
+          <p className="form-footer">
+            Remember your password?{" "}
+            <a href="/login" className="form-link">
+              Sign in
             </a>
           </p>
         </form>
@@ -138,76 +201,148 @@ const ForgotPasswordPage = (props: Props) => {
 
       {step === "otp" && (
         <form
-          className="form"
+          className="forgot-password-form"
           onSubmit={(e) => {
             e.preventDefault();
             onVerifyOtp();
           }}
         >
-          <h1 className="reset-title">Enter OTP</h1>
-          <p className="p">
+          <h1 className="forgot-password-title">Enter OTP</h1>
+          <p className="form-description">
             We sent an OTP to <strong>{userEmail}</strong>
           </p>
-          <label className="flex-column">OTP</label>
-          <div className="otp-container">
-            {otpValues.map((value, i) => (
+          
+          {/* {currentError && (
+            <div className="error-message" style={{ marginBottom: '1rem' }}>
+              {currentError}
+            </div>
+          )} */}
+          
+          <div className="form-group">
+            <label className="form-label">OTP Code</label>
+            <div className="otp-container">
+              {otpValues.map((value, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  className={`otp-input ${value ? "has-value" : ""}`}
+                  value={value}
+                  onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                  ref={(el) => (otpRefs.current[i] = el)}
+                  autoFocus={i === 0}
+                  aria-label={`Digit ${i + 1} of OTP code`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="submit-button"
+            disabled={loading}
+            aria-busy={loading}
+          >
+            {loading ? "Verifying..." : "Verify OTP"}
+          </button>
+        </form>
+      )}
+
+      {step === "reset" && (
+        <div className="forgot-password-form">
+          <h1 className="forgot-password-title">Reset Password</h1>
+          <p className="form-description">
+            Enter your new password for <strong>{userEmail}</strong>
+          </p>
+          
+          {/* {currentError && (
+            <div className="error-message" style={{ marginBottom: '1rem' }}>
+              {currentError}
+            </div>
+          )} */}
+
+          <div className="form-group">
+            <label htmlFor="newPassword" className="form-label">
+              New Password
+            </label>
+            <div className="password-input-container">
               <input
-                key={i}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                className="otp-input"
-                value={value}
-                onChange={(e) => handleOtpChange(i, e.target.value)}
-                onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                ref={(el) => (otpRefs.current[i] = el)}
-                autoFocus={i === 0}
+                type={showPassword ? "text" : "password"}
+                id="newPassword"
+                className={`form-input ${currentError ? "input-error" : ""}`}
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
               />
-            ))}
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={togglePasswordVisibility}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
-          <button type="submit" className="button-submit">
-            Verify
-          </button>
-        </form>
-      )}
 
-      {step === "changePassword" && (
-        <form className="form" onSubmit={handleSubmitPassword(onChangePassword)}>
-          <h1 className="reset-title">Change Password</h1>
-          <label className="flex-column">New Password</label>
-          <div className="inputForm">
-            <input
-              type="password"
-              placeholder="Enter new password"
-              {...registerPassword("password")}
-              className="input"
-            />
+          <div className="form-group">
+            <label htmlFor="confirmNewPassword" className="form-label">
+              Confirm New Password
+            </label>
+            <div className="password-input-container">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirmNewPassword"
+                className={`form-input ${currentError ? "input-error" : ""}`}
+                placeholder="Confirm new password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={toggleConfirmPasswordVisibility}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
-          {passwordErrors.password && <p className="error">{passwordErrors.password.message}</p>}
 
-          <label className="flex-column">Confirm Password</label>
-          <div className="inputForm">
-            <input
-              type="password"
-              placeholder="Confirm new password"
-              {...registerPassword("confirmPassword")}
-              className="input"
-            />
+          <div className="password-requirements">
+            <p>Password must contain:</p>
+            <ul>
+              <li className={newPassword.length >= PASSWORD_MIN_LENGTH ? "valid" : ""}>
+                At least 8 characters
+              </li>
+              <li className={/[a-z]/.test(newPassword) ? "valid" : ""}>
+                One lowercase letter
+              </li>
+              <li className={/[A-Z]/.test(newPassword) ? "valid" : ""}>
+                One uppercase letter
+              </li>
+              <li className={/[0-9]/.test(newPassword) ? "valid" : ""}>
+                One number
+              </li>
+              <li className={/[^a-zA-Z0-9]/.test(newPassword) ? "valid" : ""}>
+                One special character
+              </li>
+              <li className={newPassword === confirmNewPassword && newPassword.length > 0 ? "valid" : ""}>
+                Passwords match
+              </li>
+            </ul>
           </div>
-          {passwordErrors.confirmPassword && <p className="error">{passwordErrors.confirmPassword.message}</p>}
 
-          <button type="submit" className="button-submit">
-            Change Password
-          </button>
-        </form>
-      )}
-
-      {step === "success" && (
-        <div className="form">
-          <h1 className="reset-title">Success!</h1>
-          <p className="p">Your password has been changed successfully.</p>
-          <button onClick={onOk} className="button-submit">
-            Okay
+          <button
+            type="button"
+            className="submit-button"
+            onClick={handlePasswordReset}
+            disabled={loading}
+            aria-busy={loading}
+          >
+            {loading ? "Resetting..." : "Reset Password"}
           </button>
         </div>
       )}
@@ -215,4 +350,4 @@ const ForgotPasswordPage = (props: Props) => {
   );
 };
 
-export default ForgotPasswordPage;
+export default ForgotPassword;

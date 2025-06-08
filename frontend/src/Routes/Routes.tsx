@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
-import HomePage from "../pages/Homepage/Homepage";
+import Homepage from "../pages/Homepage/Homepage";
 import ImageGenerate from "../pages/Generate Image/ImageGenerate";
 
 import LoginPage from "../pages/LoginPage/LoginPage";
@@ -13,7 +13,7 @@ export const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { path: "", element: <HomePage /> },
+      { path: "/", element: <Homepage /> },
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
       { path: "reset-password", element: <ForgotPasswordpage />},

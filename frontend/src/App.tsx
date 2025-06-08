@@ -10,7 +10,6 @@ import Tutorial from "./pages/Tutorial/Tutorial";
 import Contact from "./pages/Contact/Contact";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
-import Search from "./components/Search/Search";
 import Editor from "./pages/Editor/Editor";
 import ImageGenerate from "./pages/Generate Image/ImageGenerate";
 import i18n from "i18next";
@@ -21,7 +20,7 @@ import translationRU from "./locales/ru/translation.json";
 import { ToastContainer } from "react-toastify";
 import { AppContextProvider } from "./Context/AppContext";
 import "react-toastify/dist/ReactToastify.css";
-import LoginPage from "./pages/LoginPage/LoginPage";  
+import LoginPage from "./pages/LoginPage/LoginPage";
 import RegisterPage from "./pages/RegisterPage/RegisterPage";
 import ForgotPasswordpage from "./pages/ForgotPasswordpage/ForgotPasswordpage";
 
@@ -37,7 +36,8 @@ i18n
         translation: translationRU,
       },
     },
-    fallbackLng: "en", 
+    lng: 'en',
+    fallbackLng: "en",
     detection: {
       order: [
         "querystring",
@@ -51,7 +51,7 @@ i18n
       caches: ["localStorage", "cookie"],
     },
     interpolation: {
-      escapeValue: false, 
+      escapeValue: false,
     },
   });
 
@@ -60,11 +60,8 @@ export { i18n };
 const AppRoutes: React.FC = () => {
   const location = useLocation();
 
-  // const isHomepage = location.pathname === "/";
-
   return (
     <>
-    <AppContextProvider>
       <Navbar />
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
@@ -79,16 +76,18 @@ const AppRoutes: React.FC = () => {
         </Routes>
       </Suspense>
       {location.pathname !== "/editor" && <Footer />}
-    </AppContextProvider>
     </>
   );
 };
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AppRoutes />
-    </Router>
+    <AppContextProvider>
+      <Router>
+        <AppRoutes />
+        <ToastContainer />
+      </Router>
+    </AppContextProvider>
   );
 };
 

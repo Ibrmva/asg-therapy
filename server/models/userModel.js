@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  
 
   isAccountVerified: {
     type: Boolean,
@@ -47,9 +48,13 @@ const userSchema = new mongoose.Schema({
   resetOtpExpireAt: {
     type: Number,
     default: 0
-  }
-})
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now, // Track when the user was created
+  },
+},{ timestamps: true })
 
-const userModel = mongoose.model.user || mongoose.model('user', userSchema);
+const userModel = mongoose.models['user'] || mongoose.model('user', userSchema);
 
 export default userModel;

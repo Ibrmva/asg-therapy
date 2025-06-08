@@ -1,5 +1,4 @@
 import express from 'express';
-
 import cors from 'cors';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
@@ -8,10 +7,7 @@ import sharp from 'sharp';
 import { kmeans } from 'ml-kmeans';
 import fileUpload from 'express-fileupload';
 import vtracer from 'vtracer';
-import authRouter from "./routes/authRoutes.js";
-import cookieParser from "cookie-parser";   
-import connectDB from "./config/mongodb.js";
-import userRouter from "./routes/userRoutes.js";
+
 
 dotenv.config();
 
@@ -28,10 +24,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));  // Parse large JSON payloads
 app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } }));  // Adjust file upload size limit
-
-
-app.use(cookieParser());
-app.use(cors({origin: corsOptions, credentials: true}));
 
 app.use('/api/auth', authRouter);
 
@@ -220,13 +212,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
-app.get('/', (req, res) => res.send('Server is running!'));
-app.use('/api/auth', authRouter )
-app.use('/api/user', userRouter )
-
 // Start the server
 const PORT = process.env.PORT || 4000;
-connectDB();
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

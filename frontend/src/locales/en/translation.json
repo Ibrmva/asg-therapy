@@ -5,7 +5,11 @@
         "gen": "GENERATE IMAGE",
         "tut": "TUTORIAL",
         "contact": "CONTACTS",
-        "login": "LOGIN"
+        "login": "LOGIN",
+        "logout": "Logout",
+        "translationEN": "EN",
+        "translationRU": "RU"
+        
     },
     "home": {
         "sub": "Color / Art / Heal",
