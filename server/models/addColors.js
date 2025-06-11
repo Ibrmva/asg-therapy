@@ -1,9 +1,8 @@
 import express from 'express';
-import Color from './colorModel.js'; // Import the Color model
+import Color from './colorModel.js';
 
 const router = express.Router();
 
-// POST route to add a new color
 router.post('/add', async (req, res) => {
   try {
     const { name, hex } = req.body;
@@ -20,15 +19,14 @@ router.post('/add', async (req, res) => {
   }
 });
 
-// GET route to fetch all colors
 router.get('/', async (req, res) => {
   try {
-    const colors = await Color.find(); // Fetch all colors from the database
-    res.status(200).json(colors); // Send colors as a JSON response
+    const colors = await Color.find();
+    res.status(200).json(colors);
   } catch (error) {
     console.error('Error fetching colors:', error);
     res.status(500).send('Error fetching colors');
   }
 });
 
-export default router; // Export the router
+export default router;

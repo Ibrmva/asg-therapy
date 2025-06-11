@@ -24,10 +24,11 @@ const ColorsList: React.FC<ColorsListProps> = ({ uploadedImage, onNumbersDetecte
   const [sortedExtractedColors, setSortedExtractedColors] = useState<Color[]>([]);
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const originalImageRef = useRef<string | null>(null); // Store the original image reference
   const { t } = useTranslation();
 
   useEffect(() => {
-    fetch("http://localhost:5003/colors")
+    fetch("http://localhost:5001/colors")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -45,6 +46,12 @@ const ColorsList: React.FC<ColorsListProps> = ({ uploadedImage, onNumbersDetecte
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (uploadedImage && !originalImageRef.current) {
+      originalImageRef.current = uploadedImage;
+    }
+  }, [uploadedImage]);
 
   const hexToRgb = (hex: string): [number, number, number] => {
     const bigint = parseInt(hex.slice(1), 16);
@@ -105,10 +112,11 @@ const ColorsList: React.FC<ColorsListProps> = ({ uploadedImage, onNumbersDetecte
   };
 
   useEffect(() => {
-    if (uploadedImage && colors.length > 0) {
+    const imageToUse = originalImageRef.current || uploadedImage;
+    if (imageToUse && colors.length > 0) {
       const img = new Image();
       img.crossOrigin = "Anonymous";
-      img.src = uploadedImage;
+      img.src = imageToUse;
 
       img.onload = () => {
         const canvas = canvasRef.current;
@@ -237,7 +245,7 @@ const ColorsList: React.FC<ColorsListProps> = ({ uploadedImage, onNumbersDetecte
   };
 
   if (loading) {
-    return <p>Loading colors...</p>;
+    return <p>{t("colors.loading")}</p>;
   }
 
   if (error) {

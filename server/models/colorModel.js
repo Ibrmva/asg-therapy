@@ -1,15 +1,13 @@
 import mongoose from 'mongoose';
 
-// Create a schema for colors
 const colorSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    hex: { type: String, required: true }, // Hex code for the color
+    hex: { type: String, required: true },
   },
-  { timestamps: true } // Optional, if you want to keep track of created/updated timestamps
+  { timestamps: true } 
 );
 
-// Create and export the Color model
 const Color = mongoose.model('Color', colorSchema);
 
-export default Color; // Exporting the Color model
+export default Color;

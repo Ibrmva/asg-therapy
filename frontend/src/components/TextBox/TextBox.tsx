@@ -3,6 +3,7 @@ import Draggable from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
 import "./TextBox.css";
+import { useTranslation } from "react-i18next";
 
 interface TextBoxProps {
   id: string;
@@ -10,7 +11,8 @@ interface TextBoxProps {
 }
 
 const TextBox: React.FC<TextBoxProps> = ({ id, onDelete }) => {
-  const [text, setText] = useState<string>("Click to edit");
+  const { t } = useTranslation();
+  const [text, setText] = useState<string>(t("textbox.click"));
   const [isEditing, setIsEditing] = useState<boolean>(true);
   const textBoxRef = useRef<HTMLDivElement>(null);
 

@@ -39,7 +39,6 @@
   font-family: 'Montserrat', sans-serif;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .footer-links {
     gap: 2rem;
