@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './ImageGenerate.css';
 import { assets } from '../../assets/assets';
 import { useTranslation } from "react-i18next";
+
 
 const ImageGenerate: React.FC = () => {
     const [prompt, setPrompt] = useState<string>('');
@@ -12,6 +13,18 @@ const ImageGenerate: React.FC = () => {
     const [selectedSize, setSelectedSize] = useState<string>('1024x1024');
     const [selectedColorOption, setSelectedColorOption] = useState<string>('none');
     const { t } = useTranslation();
+    // useEffect(() => {
+    //         const script = document.createElement('script');
+    //         script.src = "/pages/Generate Image/ImageGenerate.js";
+    //         script.async = true;
+    //         document.body.appendChild(script);
+
+    //         return () => {
+    //             document.body.removeChild(script);
+    //         };
+    //     }, []);
+
+    
 
     const handleGenerateImage = async () => {
         if (!prompt.trim()) {
@@ -21,7 +34,7 @@ const ImageGenerate: React.FC = () => {
         setIsLoading(true);
         try {
             const [height, width] = selectedSize.split('x').map(Number);
-            const response = await fetch("http://localhost:4000/generateImage", {
+            const response = await fetch("http://localhost:5002/generateImage", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -86,7 +99,7 @@ const ImageGenerate: React.FC = () => {
             formData.append("image", file);
             formData.append("colorOption", selectedColorOption);
 
-            const response = await fetch("http://localhost:4000/segmentImage", {
+            const response = await fetch("http://localhost:5002/segmentImage", {
                 method: "POST",
                 body: formData,
             });
@@ -323,6 +336,27 @@ const ImageGenerate: React.FC = () => {
                 <li>{t("generate.li2")}</li>
                 <li>{t("generate.li3")}</li>
             </p>
+            <div id="scroll-container">
+                <div id="scroll-content">
+                <img className="image" src={assets.card1} alt="Image 1" />
+                <img className="image" src={assets.card2} alt="Image 2" />
+                <img className="image" src={assets.card3} alt="Image 3" />
+                <img className="image" src={assets.card4} alt="Image 4" />
+                <img className="image" src={assets.card5} alt="Image 5" />
+                <img className="image" src={assets.card6} alt="Image 6" />
+                <img className="image" src={assets.card7} alt="Image 7" />
+
+
+                <img className="image" src={assets.card1} alt="Image 1" />
+                <img className="image" src={assets.card2} alt="Image 2" />
+                <img className="image" src={assets.card3} alt="Image 3" />
+                <img className="image" src={assets.card4} alt="Image 4" />
+                <img className="image" src={assets.card6} alt="Image 6" />
+                <img className="image" src={assets.card7} alt="Image 7" />
+
+                </div>
+            </div>
+
 
         
         </div>

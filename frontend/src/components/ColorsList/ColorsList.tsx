@@ -27,7 +27,7 @@ const ColorsList: React.FC<ColorsListProps> = ({ uploadedImage, onNumbersDetecte
   const { t } = useTranslation();
 
   useEffect(() => {
-    fetch("http://localhost:5001/colors")
+    fetch("http://localhost:5003/colors")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

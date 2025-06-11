@@ -14,7 +14,13 @@ import cardF from './images/cardF.png';
 import cardS from './images/cardS.png';
 import cardV from './images/cardV.png';
 import cardT from './images/cardT.png';
-
+import card1 from './images/card1.png';
+import card2 from './images/card2.png';
+import card3 from './images/card3.png';
+import card4 from './images/card4.png';
+import card5 from './images/card5.png';
+import card6 from './images/card6.png';
+import card7 from './images/card7.png';
 export const assets = {
   history_icon,
   menu_icon,
@@ -32,4 +38,11 @@ export const assets = {
   cardS,
   cardV,
   cardT,
+  card1,
+  card2,
+  card3,
+  card4,
+  card5,
+  card6,
+  card7,
 };
