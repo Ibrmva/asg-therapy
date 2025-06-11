@@ -391,8 +391,13 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         for (let dx = -radius; dx <= radius; dx++) {
           const nx = x + dx;
           const ny = y + dy;
-          
-          if (nx < 0 || nx >= width || ny < 0 || ny >= Math.floor(data.length / (width * 4))) {
+
+          if (
+            nx < 0 ||
+            nx >= width ||
+            ny < 0 ||
+            ny >= Math.floor(data.length / (width * 4))
+          ) {
             continue;
           }
 
@@ -400,13 +405,13 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
-          
+
           // Skip edge pixels
           if (r === 0 && g === 0 && b === 0) continue;
-          
+
           const colorKey = `${r},${g},${b}`;
           colorCount[colorKey] = (colorCount[colorKey] || 0) + 1;
-          
+
           if (colorCount[colorKey] > maxCount) {
             maxCount = colorCount[colorKey];
             dominantColor = { r, g, b };
@@ -448,13 +453,16 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           if (!visited[index] && !edgePixels.has(index)) {
             // Get the dominant color in this area (3x3 sample)
             const color = getDominantColor(data, width, x, y, 3);
-            
+
             // Skip white/very light areas
             if (color.r > 240 && color.g > 240 && color.b > 240) continue;
 
             // Flood fill with queue and track boundaries
             const regionPoints: Array<{ x: number; y: number }> = [];
-            let minX = width, maxX = 0, minY = height, maxY = 0;
+            let minX = width,
+              maxX = 0,
+              minY = height,
+              maxY = 0;
             const queue = [{ x, y }];
             visited[index] = true;
 
@@ -476,13 +484,13 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
                 { x: px + 1, y: py },
                 { x: px - 1, y: py },
                 { x: px, y: py + 1 },
-                { x: px, y: py - 1 }
+                { x: px, y: py - 1 },
               ];
 
               for (const neighbor of neighbors) {
                 const nx = neighbor.x;
                 const ny = neighbor.y;
-                
+
                 // Check bounds
                 if (nx <= 0 || nx >= width - 1 || ny <= 0 || ny >= height - 1) {
                   continue;
@@ -503,13 +511,13 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
               const regionWidth = maxX - minX;
               const regionHeight = maxY - minY;
               const aspectRatio = regionWidth / regionHeight;
-              
+
               // Skip regions that are too narrow or too wide
               if (aspectRatio > 0.2 && aspectRatio < 5) {
                 regions.push({
                   color: `rgb(${color.r},${color.g},${color.b})`,
                   points: regionPoints,
-                  bounds: { minX, minY, maxX, maxY }
+                  bounds: { minX, minY, maxX, maxY },
                 });
               }
             }
@@ -578,8 +586,8 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
 
     // Improved number placement using centroid and distance transform
     const generateNumbersForRegions = (
-      regions: Array<{ 
-        color: string; 
+      regions: Array<{
+        color: string;
         points: Array<{ x: number; y: number }>;
         bounds: { minX: number; minY: number; maxX: number; maxY: number };
       }>
@@ -600,8 +608,9 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         if (region.points.length < 150) return;
 
         // Calculate the centroid of the region
-        let sumX = 0, sumY = 0;
-        region.points.forEach(point => {
+        let sumX = 0,
+          sumY = 0;
+        region.points.forEach((point) => {
           sumX += point.x;
           sumY += point.y;
         });
@@ -618,20 +627,22 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           const distToRight = region.bounds.maxX - point.x;
           const distToTop = point.y - region.bounds.minY;
           const distToBottom = region.bounds.maxY - point.y;
-          
+
           // Use the minimum distance to any boundary as the score
           const minDistToBoundary = Math.min(
-            distToLeft, distToRight, distToTop, distToBottom
+            distToLeft,
+            distToRight,
+            distToTop,
+            distToBottom
           );
-          
+
           // Also consider distance to centroid for better centering
           const distToCentroid = Math.sqrt(
-            Math.pow(point.x - centroidX, 2) + 
-            Math.pow(point.y - centroidY, 2)
+            Math.pow(point.x - centroidX, 2) + Math.pow(point.y - centroidY, 2)
           );
-          
+
           // Combined score favors points that are both central and far from edges
-          const score = minDistToBoundary - (distToCentroid * 0.2);
+          const score = minDistToBoundary - distToCentroid * 0.2;
 
           if (score > maxDistance) {
             maxDistance = score;
@@ -653,7 +664,7 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       addNumbersToCanvas();
     };
 
-    // Improved number rendering with better visibility
+    // In the addNumbersToCanvas function, modify the text creation:
     const addNumbersToCanvas = () => {
       if (!fabricCanvas.current || !mainImageRef.current) return;
 
@@ -663,7 +674,7 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         .filter((obj) => obj.type === "text");
       const existingBackgrounds = fabricCanvas.current
         .getObjects()
-        .filter((obj) => obj.type === "rect" && obj.name === "number-bg");
+        .filter((obj) => obj.type === "circle" && obj.name === "number-bg");
       existingNumbers.forEach((num) => fabricCanvas.current?.remove(num));
       existingBackgrounds.forEach((bg) => fabricCanvas.current?.remove(bg));
 
@@ -677,28 +688,148 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
 
       numberPositions.forEach((pos) => {
         // Convert position from original image coordinates to canvas coordinates
-        const x =
-          imgLeft + (pos.x / originalWidth) * (img.width || 0) * imgScaleX;
-        const y =
-          imgTop + (pos.y / originalHeight) * (img.height || 0) * imgScaleY;
+        const x = imgLeft + (pos.x / originalWidth) * (img.width || 0) * imgScaleX;
+        const y = imgTop + (pos.y / originalHeight) * (img.height || 0) * imgScaleY;
+
+        // Create a group for the number and its background
+        const bgCircle = new fabric.Circle({
+          radius: 15,  // Slightly larger for easier selection
+          fill: 'rgba(0,0,0,0)',  // Fully transparent
+          stroke: 'rgba(0,0,0,0)',  // Fully transparent
+          originX: 'center',
+          originY: 'center',
+          selectable: true,
+          hasControls: false,
+          hasBorders: false,
+          name: 'number-bg',
+          hoverCursor: 'move',
+          perPixelTargetFind: true  // Makes the transparent circle selectable
+        });
 
         const text = new fabric.Text(pos.number.toString(), {
-          left: x,
-          top: y,
           fontSize: 14,
           fill: "black",
           fontFamily: "Arial",
           fontWeight: "bold",
           originX: "center",
           originY: "center",
-          selectable: false,
-          evented: false,
+          selectable: true,
+          hasControls: false,
+          hasBorders: true,
+          name: "number-text",
+          data: { number: pos.number }, // Store original number for reference
         });
 
-        fabricCanvas.current?.add(text);
-        text.bringToFront();
+        const group = new fabric.Group([bgCircle, text], {
+          left: x,
+          top: y,
+          selectable: true,
+          hasControls: true,
+          hasBorders: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          name: "number-group",
+          data: { number: pos.number },
+        });
+
+        // Add event listeners for when the number is moved
+        group.on("modified", () => {
+          if (onNumbersGenerated) {
+            // Update the positions array with the new coordinates
+            const updatedPositions = numberPositions.map((p) => {
+              if (p.number === pos.number) {
+                // Convert back to original image coordinates
+                const originalX =
+                  (((group.left! - imgLeft) / imgScaleX) * originalWidth) /
+                  (img.width || originalWidth);
+                const originalY =
+                  (((group.top! - imgTop) / imgScaleY) * originalHeight) /
+                  (img.height || originalHeight);
+                return { ...p, x: originalX, y: originalY };
+              }
+              return p;
+            });
+            onNumbersGenerated(updatedPositions);
+          }
+        });
+
+        fabricCanvas.current?.add(group);
+        group.bringToFront();
       });
+
+      // Enable selection and movement of numbers
+      fabricCanvas.current?.renderAll();
     };
+
+    // In the useEffect for image loading, modify the number handling:
+    useEffect(() => {
+      if (!fabricCanvas.current || !uploadedImage) return;
+
+      // Clear existing objects but preserve any manually positioned numbers
+      const existingNumbers = fabricCanvas.current
+        .getObjects()
+        .filter((obj) => obj.name === "number-group");
+
+      fabricCanvas.current.clear();
+
+      // Only re-add numbers if we're not preserving existing positions
+      if (numberPositions.length === 0) {
+        existingNumbers.forEach((num) => fabricCanvas.current?.add(num));
+      }
+
+      fabric.Image.fromURL(uploadedImage, (img) => {
+        mainImageRef.current = img;
+        // ... rest of the image loading code ...
+
+        // Add numbers after image is loaded
+        addNumbersToCanvas();
+
+        // ... rest of the code ...
+      });
+    }, [uploadedImage, isFrameEditable]);
+
+    // Add this new function to handle manual number addition:
+    const addManualNumber = (position: { x: number; y: number }) => {
+      if (!fabricCanvas.current || !mainImageRef.current) return;
+
+      const img = mainImageRef.current;
+      const nextNumber =
+        numberPositions.length > 0
+          ? Math.max(...numberPositions.map((p) => p.number)) + 1
+          : 1;
+
+      const newPosition = {
+        x: position.x,
+        y: position.y,
+        number: nextNumber,
+      };
+
+      if (onNumbersGenerated) {
+        onNumbersGenerated([...numberPositions, newPosition]);
+      }
+    };
+
+    // Modify the canvas setup to handle clicks for adding numbers:
+    useEffect(() => {
+      if (!fabricCanvas.current) return;
+
+      const handleCanvasClick = (e: fabric.IEvent) => {
+        if (e.target || !isFrameEditable) return;
+
+        // Add a new number at the clicked position
+        const pointer = fabricCanvas.current?.getPointer(e.e);
+        if (pointer) {
+          addManualNumber({ x: pointer.x, y: pointer.y });
+        }
+      };
+
+      fabricCanvas.current.on("mouse:down", handleCanvasClick);
+
+      return () => {
+        fabricCanvas.current?.off("mouse:down", handleCanvasClick);
+      };
+    }, [isFrameEditable, numberPositions]);
 
     // Debug function to visualize regions
     const visualizeRegions = (regions: typeof colorRegions) => {
