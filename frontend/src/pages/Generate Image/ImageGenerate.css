@@ -90,7 +90,7 @@ body {
   .image-generator-container p {
     margin-top: 0%;
     color: #8a8a8a;
-    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 300;
     font-size: 16px;
     padding: 20px 139px;
@@ -225,7 +225,7 @@ body {
     gap: 10px;
     align-items: flex-end;
     justify-content: flex-end;
-    margin-right: 139px;
+    margin-right: 140px;
     margin-left: auto;
     width: 100px; 
     height: auto; 
@@ -258,16 +258,16 @@ body {
   .generate-btn {
     background: linear-gradient(
       45deg,
-      #fa862e, /* Soft yellow */
-      #F28D35, /* Peach */
-      #D83367, /* Soft pink */
-      #D83367, /* Soft pink */
-      #FAD02E  /* Soft yellow */
+      #D8B4F8, /* Light Lavender */
+      #C084FC, /* Soft Orchid */
+      #E0BBE4, /* Pastel Purple */
+      #D6A2E8, /* Pale Amethyst */
+      #F3D1FF  /* Lilac Mist */
     );
     background-size: 200%;
-    color: #ffffff; /* Pure white for clarity */
+    color: black; /* Pure white for clarity */
     padding: 12px;
-    border: 1px solid #D83367;
+    /* border: 1px solid #ba33d8; */
     border-radius: 100px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -275,9 +275,9 @@ body {
     min-height: 44px;
     text-align: center;
     margin: 10px 0px;
-    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 300;
-    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
     letter-spacing: 1px;
     display: inline-block;
   
@@ -471,9 +471,9 @@ body {
     min-height: 44px;
     text-align: center;
     margin: 0px;
-    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 300;
-    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
     letter-spacing: 1px;
     display: inline-block; 
   }
@@ -585,10 +585,10 @@ body {
   
     .dimension-input {
       text-align: center;
-      font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Montserrat', sans-serif;
       font-weight: 300;
       font-size: 14px;
-      padding: 10px 27px;
+      padding: 10px 26px;
       margin: 1px;
       border-radius: 5px;
       border: 1px solid #9c9c9c;
@@ -631,7 +631,7 @@ body {
   }
   
   .dimension-input:hover {
-    border-color: #161616;
+    /* border-color: #161616; */
     background-color: #181818;
     
   }
@@ -704,9 +704,9 @@ body {
   }
   .color-option-input {
     text-align: center; /* Center text horizontally */
-    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 300;
-    font-size: 14px;
+    font-size: 13px;
     /* letter-spacing: 1px; */
     min-width: 124px;
     padding: 10px 30px;
@@ -746,6 +746,10 @@ body {
   .color-option-input:focus {
     outline: 2px solid #121212;
     outline-offset: 2px;
+  }
+
+  .color-option-input:hover {
+    background-color: #181818;
   }
   
   .convert-btn {

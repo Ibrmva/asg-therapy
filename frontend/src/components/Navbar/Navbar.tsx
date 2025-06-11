@@ -65,9 +65,9 @@ const Navbar: React.FC = () => {
         <button onClick={() => navigate("/tutorial")} className="nav-button" type="button">
           {t("navbar.tut")}
         </button>
-        <button onClick={() => navigate("/contact")} className="nav-button" type="button">
+        {/* <button onClick={() => navigate("/contact")} className="nav-button" type="button">
           {t("navbar.contact")}
-        </button>
+        </button> */}
       </div>
     </div>
 
