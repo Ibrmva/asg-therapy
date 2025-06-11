@@ -375,7 +375,49 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       return new ImageData(edgeData, originalSize.width, originalSize.height);
     };
 
-    // Region finding with flood fill
+    // Helper to get dominant color in an area
+    const getDominantColor = (
+      data: Uint8ClampedArray,
+      width: number,
+      x: number,
+      y: number,
+      radius: number
+    ) => {
+      const colorCount: Record<string, number> = {};
+      let maxCount = 0;
+      let dominantColor = { r: 0, g: 0, b: 0 };
+
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          
+          if (nx < 0 || nx >= width || ny < 0 || ny >= Math.floor(data.length / (width * 4))) {
+            continue;
+          }
+
+          const i = (ny * width + nx) * 4;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // Skip edge pixels
+          if (r === 0 && g === 0 && b === 0) continue;
+          
+          const colorKey = `${r},${g},${b}`;
+          colorCount[colorKey] = (colorCount[colorKey] || 0) + 1;
+          
+          if (colorCount[colorKey] > maxCount) {
+            maxCount = colorCount[colorKey];
+            dominantColor = { r, g, b };
+          }
+        }
+      }
+
+      return dominantColor;
+    };
+
+    // Improved region finding with flood fill and better boundary detection
     const findEnclosedRegions = (
       data: Uint8ClampedArray,
       width: number,
@@ -385,6 +427,7 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       const regions: Array<{
         color: string;
         points: Array<{ x: number; y: number }>;
+        bounds: { minX: number; minY: number; maxX: number; maxY: number };
       }> = [];
 
       // First pass to find edges (black pixels)
@@ -403,37 +446,15 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         for (let x = 1; x < width - 1; x += 1) {
           const index = y * width + x;
           if (!visited[index] && !edgePixels.has(index)) {
-            // Get the color at this position (average of 3x3 area for stability)
-            let rSum = 0,
-              gSum = 0,
-              bSum = 0,
-              count = 0;
-            for (let ky = -1; ky <= 1; ky++) {
-              for (let kx = -1; kx <= 1; kx++) {
-                const ni = ((y + ky) * width + (x + kx)) * 4;
-                if (data[ni] !== 0) {
-                  // Not edge
-                  rSum += data[ni];
-                  gSum += data[ni + 1];
-                  bSum += data[ni + 2];
-                  count++;
-                }
-              }
-            }
-
-            if (count === 0) continue;
-
-            const r = Math.round(rSum / count);
-            const g = Math.round(gSum / count);
-            const b = Math.round(bSum / count);
-
+            // Get the dominant color in this area (3x3 sample)
+            const color = getDominantColor(data, width, x, y, 3);
+            
             // Skip white/very light areas
-            if (r > 240 && g > 240 && b > 240) continue;
-
-            const color = `rgb(${r},${g},${b})`;
+            if (color.r > 240 && color.g > 240 && color.b > 240) continue;
 
             // Flood fill with queue and track boundaries
             const regionPoints: Array<{ x: number; y: number }> = [];
+            let minX = width, maxX = 0, minY = height, maxY = 0;
             const queue = [{ x, y }];
             visited[index] = true;
 
@@ -442,45 +463,53 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
               const px = point.x;
               const py = point.y;
 
-              // Check bounds
-              if (px <= 0 || px >= width - 1 || py <= 0 || py >= height - 1)
-                continue;
+              // Update bounds
+              minX = Math.min(minX, px);
+              maxX = Math.max(maxX, px);
+              minY = Math.min(minY, py);
+              maxY = Math.max(maxY, py);
 
-              const pIndex = py * width + px;
+              regionPoints.push({ x: px, y: py });
 
-              // Add to region if not edge and not visited
-              if (!edgePixels.has(pIndex) && !visited[pIndex]) {
-                visited[pIndex] = true;
-                regionPoints.push({ x: px, y: py });
+              // Check 4-directional neighbors
+              const neighbors = [
+                { x: px + 1, y: py },
+                { x: px - 1, y: py },
+                { x: px, y: py + 1 },
+                { x: px, y: py - 1 }
+              ];
 
-                // Add neighbors (4-directional for better region cohesion)
-                queue.push({ x: px + 1, y: py });
-                queue.push({ x: px - 1, y: py });
-                queue.push({ x: px, y: py + 1 });
-                queue.push({ x: px, y: py - 1 });
+              for (const neighbor of neighbors) {
+                const nx = neighbor.x;
+                const ny = neighbor.y;
+                
+                // Check bounds
+                if (nx <= 0 || nx >= width - 1 || ny <= 0 || ny >= height - 1) {
+                  continue;
+                }
+
+                const nIndex = ny * width + nx;
+
+                // Add to region if not edge and not visited
+                if (!edgePixels.has(nIndex) && !visited[nIndex]) {
+                  visited[nIndex] = true;
+                  queue.push(neighbor);
+                }
               }
             }
 
-            // Only keep regions larger than a threshold
+            // Only keep regions larger than a threshold and with reasonable aspect ratio
             if (regionPoints.length > 100) {
-              // Verify this is a proper enclosed region
-              let isEnclosed = true;
-              for (const point of regionPoints) {
-                if (
-                  point.x === 0 ||
-                  point.x === width - 1 ||
-                  point.y === 0 ||
-                  point.y === height - 1
-                ) {
-                  isEnclosed = false;
-                  break;
-                }
-              }
-
-              if (isEnclosed) {
+              const regionWidth = maxX - minX;
+              const regionHeight = maxY - minY;
+              const aspectRatio = regionWidth / regionHeight;
+              
+              // Skip regions that are too narrow or too wide
+              if (aspectRatio > 0.2 && aspectRatio < 5) {
                 regions.push({
-                  color,
+                  color: `rgb(${color.r},${color.g},${color.b})`,
                   points: regionPoints,
+                  bounds: { minX, minY, maxX, maxY }
                 });
               }
             }
@@ -547,10 +576,13 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       generateNumbersForRegions(regions);
     };
 
-    // Generate numbers for each color region
-    // Generate numbers for each color region
+    // Improved number placement using centroid and distance transform
     const generateNumbersForRegions = (
-      regions: Array<{ color: string; points: Array<{ x: number; y: number }> }>
+      regions: Array<{ 
+        color: string; 
+        points: Array<{ x: number; y: number }>;
+        bounds: { minX: number; minY: number; maxX: number; maxY: number };
+      }>
     ) => {
       if (!mainImageRef.current || !fabricCanvas.current) return;
 
@@ -564,46 +596,54 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       );
 
       sortedRegions.forEach((region, index) => {
-        // Calculate the bounding box of the region
-        let minX = Infinity,
-          maxX = -Infinity,
-          minY = Infinity,
-          maxY = -Infinity;
+        // Only process regions above a certain size threshold
+        if (region.points.length < 150) return;
 
-        region.points.forEach((point) => {
-          minX = Math.min(minX, point.x);
-          maxX = Math.max(maxX, point.x);
-          minY = Math.min(minY, point.y);
-          maxY = Math.max(maxY, point.y);
+        // Calculate the centroid of the region
+        let sumX = 0, sumY = 0;
+        region.points.forEach(point => {
+          sumX += point.x;
+          sumY += point.y;
         });
+        const centroidX = sumX / region.points.length;
+        const centroidY = sumY / region.points.length;
 
-        // Calculate the center of the bounding box
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-
-        // Find the point in the region closest to the center
+        // Find the point in the region farthest from any edge (most central)
         let bestPoint = region.points[0];
-        let minDist = Infinity;
+        let maxDistance = 0;
 
         for (const point of region.points) {
-          const dist = Math.sqrt(
-            Math.pow(point.x - centerX, 2) + Math.pow(point.y - centerY, 2)
+          // Calculate distance to bounds (approximate distance to edge)
+          const distToLeft = point.x - region.bounds.minX;
+          const distToRight = region.bounds.maxX - point.x;
+          const distToTop = point.y - region.bounds.minY;
+          const distToBottom = region.bounds.maxY - point.y;
+          
+          // Use the minimum distance to any boundary as the score
+          const minDistToBoundary = Math.min(
+            distToLeft, distToRight, distToTop, distToBottom
           );
-          if (dist < minDist) {
-            minDist = dist;
+          
+          // Also consider distance to centroid for better centering
+          const distToCentroid = Math.sqrt(
+            Math.pow(point.x - centroidX, 2) + 
+            Math.pow(point.y - centroidY, 2)
+          );
+          
+          // Combined score favors points that are both central and far from edges
+          const score = minDistToBoundary - (distToCentroid * 0.2);
+
+          if (score > maxDistance) {
+            maxDistance = score;
             bestPoint = point;
           }
         }
 
-        // Only add if the region is large enough
-        if (region.points.length > 100) {
-          // Adjust threshold as needed
-          positions.push({
-            x: bestPoint.x,
-            y: bestPoint.y,
-            number: index + 1,
-          });
-        }
+        positions.push({
+          x: bestPoint.x,
+          y: bestPoint.y,
+          number: index + 1,
+        });
       });
 
       if (onNumbersGenerated) {
@@ -613,7 +653,7 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       addNumbersToCanvas();
     };
 
-    // Add numbers to canvas with better visibility
+    // Improved number rendering with better visibility
     const addNumbersToCanvas = () => {
       if (!fabricCanvas.current || !mainImageRef.current) return;
 
