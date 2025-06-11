@@ -61,234 +61,240 @@ const ImageGenerate: React.FC = () => {
         }
     };
 
-    const handleUploadImage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setUploadedImage(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+  const handleUploadImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-    const handleDeleteImage = () => {
-        setUploadedImage(null);
-        setGeneratedImage('');
-    };
+  const handleDeleteImage = () => {
+    setUploadedImage(null);
+    setGeneratedImage("");
+  };
 
-    const handleSegmentImage = async () => {
-        console.log("Uploaded Image:", uploadedImage);
-        console.log("Generated Image:", generatedImage);
-        console.log("Selected Color Option:", selectedColorOption);
-        const imageToSegment = uploadedImage || generatedImage;
-        if (!imageToSegment) {
-            alert("Please upload or generate an image first.");
-            return;
-        }
+  const handleSegmentImage = async () => {
+    console.log("Uploaded Image:", uploadedImage);
+    console.log("Generated Image:", generatedImage);
+    console.log("Selected Color Option:", selectedColorOption);
+    const imageToSegment = uploadedImage || generatedImage;
+    if (!imageToSegment) {
+      alert("Please upload or generate an image first.");
+      return;
+    }
 
-        if (selectedColorOption === "none") {
-            alert("Please select a valid color option.");
-            return;
-        }
+    if (selectedColorOption === "none") {
+      alert("Please select a valid color option.");
+      return;
+    }
 
-        setIsSegmentLoading(true);
-        try {
-            const file = dataURLtoFile(imageToSegment, "image.png");
-            const formData = new FormData();
-            formData.append("image", file);
-            formData.append("colorOption", selectedColorOption);
+    setIsSegmentLoading(true);
+    try {
+      const file = dataURLtoFile(imageToSegment, "image.png");
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("colorOption", selectedColorOption);
 
             const response = await fetch("http://localhost:5002/segmentImage", {
                 method: "POST",
                 body: formData,
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                alert(`Error: ${errorData.error || "Failed to segment image"}`);
-                return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error || "Failed to segment image"}`);
+        return;
+      }
+
+      const { image, error } = await response.json();
+      if (error) {
+        alert(`Error: ${error}`);
+        return;
+      }
+
+      if (!image) {
+        alert("Segmented image data is missing from the response.");
+        return;
+      }
+
+      setGeneratedImage(`data:image/png;base64,${image}`);
+    } catch (error) {
+      console.error("Error segmenting image:", error);
+      alert("Error segmenting image. Please try again later.");
+    } finally {
+      setIsSegmentLoading(false);
+    }
+  };
+
+  const dataURLtoFile = (dataUrl: string, filename: string): File => {
+    const [header, content] = dataUrl.split(",");
+    const match = header.match(/:(.*?);/);
+    const mime = match ? match[1] : "";
+
+    if (mime === "image/svg+xml") {
+      const blob = new Blob([decodeURIComponent(atob(content))], {
+        type: mime,
+      });
+      return new File([blob], filename, { type: mime });
+    } else {
+      const bstr = atob(content);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, { type: mime });
+    }
+  };
+
+  const isSVG = (image: string) => {
+    return image && image.startsWith("data:image/svg+xml");
+  };
+
+  return (
+    <div className="image-generator-container">
+      {/* <h1><span className="art-text">Create</span> Your Art, <span className="art-text">One Number</span> at a Time!</h1> */}
+      <div className="content">
+        <div className="generate-box">
+          <textarea
+            className="prompt-input"
+            placeholder={t("generate.ph")}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={2}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleGenerateImage();
+              }
+            }}
+          />
+
+          <select
+            className="dimension-input"
+            value={selectedSize}
+            onChange={(e) => setSelectedSize(e.target.value)}
+          >
+            <option value="1024x1024">1024x1024</option>
+            <option value="1024x1792">1024x1792</option>
+            <option value="1792x1024">1792x1024</option>
+          </select>
+
+          <button
+            className="generate-btn"
+            onClick={handleGenerateImage}
+            disabled={isLoading}
+          >
+            {isLoading ? t("generate.loading") : t("generate.generate")}
+          </button>
+        </div>
+        <div className="btn-container">
+          <select
+            className="color-option-input"
+            value={selectedColorOption}
+            onChange={(e) => setSelectedColorOption(e.target.value)}
+          >
+            <option value="none">{t("generate.choose")}</option>
+            <option value="vector">{t("generate.vector")}</option>
+            <option value="12">{t("generate.12")}</option>
+            <option value="24">{t("generate.24")}</option>
+          </select>
+          <button
+            className="segment-btn"
+            onClick={handleSegmentImage}
+            disabled={isSegmentLoading || (!uploadedImage && !generatedImage)}
+          >
+            {isSegmentLoading ? t("generate.loading2") : t("generate.segment")}
+          </button>
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleUploadImage}
+          style={{ display: "none" }}
+          id="upload-image-input"
+        />
+
+        <div className="image-container">
+          {uploadedImage ? (
+            <img
+              src={uploadedImage}
+              className="uploaded-image"
+              alt="Uploaded"
+            />
+          ) : (
+            <img
+              src={
+                isSVG(generatedImage)
+                  ? generatedImage
+                  : generatedImage || assets.image_placeholder
+              }
+              className="generated-image"
+              alt="Placeholder"
+            />
+          )}
+        </div>
+
+        <div className="button-container">
+          <button
+            className="upload-btn"
+            onClick={() =>
+              document.getElementById("upload-image-input")?.click()
             }
+          >
+            <svg
+              aria-hidden="true"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeWidth="2"
+                stroke="#fffffff"
+                d="M13.5 3H12H8C6.34315 3 5 4.34315 5 6V18C5 19.6569 6.34315 21 8 21H11M13.5 3L19 8.625M13.5 3V7.625C13.5 8.17728 13.9477 8.625 14.5 8.625H19M19 8.625V11.8125"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              ></path>
+              <path
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                strokeWidth="2"
+                stroke="#fffffff"
+                d="M17 15V18M17 21V18M17 18H14M17 18H20"
+              ></path>
+            </svg>
+          </button>
 
-            const { image, error } = await response.json();
-            if (error) {
-                alert(`Error: ${error}`);
-                return;
-            }
-
-            if (!image) {
-                alert("Segmented image data is missing from the response.");
-                return;
-            }
-
-            setGeneratedImage(`data:image/png;base64,${image}`);
-        } catch (error) {
-            console.error("Error segmenting image:", error);
-            alert("Error segmenting image. Please try again later.");
-        } finally {
-            setIsSegmentLoading(false);
-        }
-    };
-
-    const dataURLtoFile = (dataUrl: string, filename: string): File => {
-        const [header, content] = dataUrl.split(',');
-        const match = header.match(/:(.*?);/);
-        const mime = match ? match[1] : '';
-
-        if (mime === "image/svg+xml") {
-            const blob = new Blob([decodeURIComponent(atob(content))], { type: mime });
-            return new File([blob], filename, { type: mime });
-        } else {
-            const bstr = atob(content);
-            let n = bstr.length;
-            const u8arr = new Uint8Array(n);
-            while (n--) {
-                u8arr[n] = bstr.charCodeAt(n);
-            }
-            return new File([u8arr], filename, { type: mime });
-        }
-    };
-
-    const isSVG = (image: string) => {
-        return image && image.startsWith("data:image/svg+xml");
-    };
-
-    return (
-        <div className="image-generator-container">
-            {/* <h1><span className="art-text">Create</span> Your Art, <span className="art-text">One Number</span> at a Time!</h1> */}
-            <div className="content">
-                <div className='generate-box'>
-                    <textarea
-                        className="prompt-input"
-                        placeholder={t("generate.ph")}
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        rows={2}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleGenerateImage();
-                            }
-                        }}
-                    />
-
-                    <select
-                        className="dimension-input"
-                        value={selectedSize}
-                        onChange={(e) => setSelectedSize(e.target.value)}
-                    >
-                        <option value="1024x1024">1024x1024</option>
-                        <option value="1024x1792">1024x1792</option>
-                        <option value="1792x1024">1792x1024</option>
-                    </select>
-
-                    <button
-                        className="generate-btn"
-                        onClick={handleGenerateImage}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? t("generate.loading") : t("generate.generate")}
-                    </button>
-
-                </div>
-                <div className="btn-container">
-                    <select
-                        className="color-option-input"
-                        value={selectedColorOption}
-                        onChange={(e) => setSelectedColorOption(e.target.value)}
-                    >
-                        <option value="none">{t("generate.choose")}</option>
-                        <option value="vector">{t("generate.vector")}</option>
-                        <option value="12">{t("generate.12")}</option>
-                        <option value="24">{t("generate.24")}</option>
-                    </select>
-                    <button
-                        className="segment-btn"
-                        onClick={handleSegmentImage}
-                        disabled={isSegmentLoading || (!uploadedImage && !generatedImage)}
-                    >
-                        {isSegmentLoading ? t("generate.loading2") : t("generate.segment")}
-                    </button>
-                </div>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadImage}
-                    style={{ display: 'none' }}
-                    id="upload-image-input"
-                />
-                
-                <div className="image-container">
-                    {uploadedImage ? (
-                        <img
-                            src={uploadedImage}
-                            className="uploaded-image"
-                            alt="Uploaded"
-                        />
-                    ) : (
-                        <img
-                            src={isSVG(generatedImage) ? generatedImage : (generatedImage || assets.image_placeholder)}
-                            className="generated-image"
-                            alt="Placeholder"
-                        />
-                    )}
-                </div>
-
-
-                <div className="button-container">
-                    <button
-                        className="upload-btn"
-                        onClick={() => document.getElementById('upload-image-input')?.click()}
-                    >
-                        <svg
-                            aria-hidden="true"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                strokeWidth="2"
-                                stroke="#fffffff"
-                                d="M13.5 3H12H8C6.34315 3 5 4.34315 5 6V18C5 19.6569 6.34315 21 8 21H11M13.5 3L19 8.625M13.5 3V7.625C13.5 8.17728 13.9477 8.625 14.5 8.625H19M19 8.625V11.8125"
-                                strokeLinejoin="round"
-                                strokeLinecap="round"
-                            ></path>
-                            <path
-                                strokeLinejoin="round"
-                                strokeLinecap="round"
-                                strokeWidth="2"
-                                stroke="#fffffff"
-                                d="M17 15V18M17 21V18M17 18H14M17 18H20"
-                            ></path>
-                        </svg>
-                    </button>
-
-                    {generatedImage && (
-                        <a
-                            href={generatedImage}
-                            download="generated-image.png"
-                            className="download-btn"
-                        >
-                            <span className="icon">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="w-6 h-6"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                                    />
-                                </svg>
-                            </span>
-                        </a>
-                    )}
+          {generatedImage && (
+            <a
+              href={generatedImage}
+              download="generated-image.png"
+              className="download-btn"
+            >
+              <span className="icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                  />
+                </svg>
+              </span>
+            </a>
+          )}
 
                     <button className="delete-btn" onClick={handleDeleteImage} disabled={!uploadedImage && !generatedImage}>
                         <svg
