@@ -15,13 +15,11 @@ const FrameTool: React.FC<FrameToolProps> = ({ fabricCanvas }) => {
       console.log("Toggling frame editability:", !prev);
 
       if (fabricCanvas.current) {
-        // Get the first image object from the canvas
         const img = fabricCanvas.current.getObjects("image")[0] as fabric.Image;
 
         if (img) {
-          const newEditableState = !prev; // Toggle the editability state
+          const newEditableState = !prev;
 
-          // Update the image properties based on the new editable state
           img.set({
             selectable: newEditableState, // Allow selection
             hasControls: newEditableState, // Show resize handles
@@ -33,14 +31,12 @@ const FrameTool: React.FC<FrameToolProps> = ({ fabricCanvas }) => {
             lockRotation: !newEditableState, // Unlock rotation
           });
 
-          // Select the image if it's now editable
           if (newEditableState) {
             fabricCanvas.current.setActiveObject(img); // Select the object for editing
           } else {
             fabricCanvas.current.discardActiveObject(); // Deselect the object if not editable
           }
 
-          // Re-render the canvas to apply the changes
           fabricCanvas.current.renderAll();
 
           console.log("Image properties:", img); // Log the image properties for debugging
@@ -100,7 +96,7 @@ const FrameTool: React.FC<FrameToolProps> = ({ fabricCanvas }) => {
   return (
     <button
       className={`toolbar-button ${isFrameEditable ? "active" : ""}`}
-      title={isFrameEditable ? "Lock Frame" : "Edit Frame"} // Dynamic title based on state
+      title={isFrameEditable ? "Lock Frame" : "Edit Frame"}
       onClick={toggleFrameEditability}
     >
       <FontAwesomeIcon icon={faCropSimple} />

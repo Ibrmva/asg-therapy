@@ -23,7 +23,7 @@ interface TextBoxData {
 
 const Toolbar: React.FC<ToolbarProps> = ({ onUndo, onRedo }) => {
   const [textBoxes, setTextBoxes] = useState<TextBoxData[]>([]);
-  const fabricCanvas = useRef<fabric.Canvas | null>(null); // Ensure this is correctly initialized elsewhere
+  const fabricCanvas = useRef<fabric.Canvas | null>(null);
   const [isFrameEditable, setIsFrameEditable] = useState(false);
 
   const handleAddTextBox = () => {

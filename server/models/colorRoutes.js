@@ -16,9 +16,8 @@ router.post('/add', async (req, res) => {
   }
 });
 
-// GET route to fetch all colors
 router.get('/', async (req, res) => {
-    console.log('Fetching all colors');  // Add this for debugging
+    console.log('Fetching all colors');
     try {
       const colors = await Color.find();
       res.status(200).json(colors);
@@ -28,4 +27,4 @@ router.get('/', async (req, res) => {
     }
   });
 
-export default router;  // Exporting router in ES module syntax
+export default router;

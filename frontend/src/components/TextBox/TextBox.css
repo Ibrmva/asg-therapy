@@ -16,7 +16,7 @@
     border: none;
     outline: none;
     background: transparent;
-    font-size: 14px;
+    font-size: 12px;
   }
   
   .delete-button {
@@ -27,7 +27,7 @@
     color: white;
     border: none;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 7px;
   }
 
   .hidden-controls .react-resizable-handle {

@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now, // Track when the user was created
+    default: Date.now,
   },
 },{ timestamps: true })
 

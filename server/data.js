@@ -4,7 +4,7 @@ import cors from 'cors';
 import colorRoutes from './models/colorRoutes.js';  // Importing the colorRoutes with ES6 syntax
 
 const app = express();
-const port = 5003;
+const port = 5001;
 
 app.use(cors());  // Enable CORS for all routes
 

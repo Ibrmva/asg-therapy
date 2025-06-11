@@ -40,7 +40,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
     >([]);
     const { t } = useTranslation();
 
-    // Initialize canvas
     useEffect(() => {
       if (!fabricCanvasRef.current) return;
 
@@ -56,17 +55,14 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       };
     }, []);
 
-    // Draw grid function
     const drawGrid = () => {
       if (!fabricCanvas.current) return;
 
       const width = fabricCanvas.current.width!;
       const height = fabricCanvas.current.height!;
 
-      // Clear any previous grid
       clearGrid();
 
-      // Horizontal lines
       for (let y = 0; y < height; y += gridSpacing) {
         const line = new fabric.Line([0, y, width, y], {
           stroke: "rgba(235, 235, 235, 0.5)",
@@ -76,7 +72,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         fabricCanvas.current.add(line);
       }
 
-      // Vertical lines
       for (let x = 0; x < width; x += gridSpacing) {
         const line = new fabric.Line([x, 0, x, height], {
           stroke: "rgba(235, 235, 235, 0.5)",
@@ -89,7 +84,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       fabricCanvas.current.renderAll();
     };
 
-    // Clear grid function
     const clearGrid = () => {
       if (!fabricCanvas.current) return;
       fabricCanvas.current
@@ -98,7 +92,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       fabricCanvas.current.renderAll();
     };
 
-    // Toggle grid visibility
     const toggleGrid = () => {
       setIsGridVisible((prev) => !prev);
       if (!isGridVisible) {
@@ -108,7 +101,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       }
     };
 
-    // Handle frame editability
     const handleFrameEditability = () => {
       const newState = !isFrameEditable;
       setIsFrameEditable(newState);
@@ -130,7 +122,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       toggleFrameEditability();
     };
 
-    // Edge detection with proper outline visibility
     const enhancedCannyEdgeDetection = (
       data: Uint8ClampedArray,
       width: number,
@@ -148,7 +139,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         [-1, -2, -1],
       ];
 
-      // Calculate gradients
       const gradients = new Array(width * height).fill(0);
       let maxGradient = 0;
 
@@ -173,7 +163,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         }
       }
 
-      // Adaptive thresholding
       const threshold = maxGradient * 0.15;
       for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
@@ -189,7 +178,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       return edgeData;
     };
 
-    // Edge cleanup
     const cleanUpEdges = (
       data: Uint8ClampedArray,
       width: number,
@@ -197,7 +185,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
     ) => {
       const cleanedData = new Uint8ClampedArray(data);
 
-      // Remove isolated edge pixels
       for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
           const i = (y * width + x) * 4;
@@ -220,7 +207,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       return cleanedData;
     };
 
-    // Outline image with proper visible edges
     const outlineImage = () => {
       if (!fabricCanvas.current || !mainImageRef.current) return;
 
@@ -235,7 +221,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         .getObjects()
         .filter((obj) => obj.type === "line");
 
-      // Create temporary canvas
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d");
       if (!tempCtx) return;
@@ -244,10 +229,8 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       tempCanvas.width = originalSize.width;
       tempCanvas.height = originalSize.height;
 
-      // Draw the original image
       tempCtx.drawImage(originalImage.getElement(), 0, 0);
 
-      // Get image data
       const imageData = tempCtx.getImageData(
         0,
         0,
@@ -263,7 +246,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         data[i] = data[i + 1] = data[i + 2] = gray;
       }
 
-      // Apply edge detection
       const edgeData = enhancedCannyEdgeDetection(
         data,
         tempCanvas.width,
@@ -275,36 +257,31 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         tempCanvas.height
       );
 
-      // Create transparent background with black outlines
       const finalCanvas = document.createElement("canvas");
       finalCanvas.width = originalSize.width;
       finalCanvas.height = originalSize.height;
       const finalCtx = finalCanvas.getContext("2d");
       if (!finalCtx) return;
 
-      // Fill with transparent background
       finalCtx.fillStyle = "rgba(0, 0, 0, 0)";
       finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
 
-      // Draw only the edges (black) on transparent background
       const finalImageData = finalCtx.createImageData(
         finalCanvas.width,
         finalCanvas.height
       );
       for (let i = 0; i < processedEdgeData.length; i += 4) {
-        // Keep black pixels (edges) and make everything else transparent
         if (processedEdgeData[i] === 0) {
-          finalImageData.data[i] = 0; // R
-          finalImageData.data[i + 1] = 0; // G
-          finalImageData.data[i + 2] = 0; // B
-          finalImageData.data[i + 3] = 255; // A (opaque)
+          finalImageData.data[i] = 0;
+          finalImageData.data[i + 1] = 0;
+          finalImageData.data[i + 2] = 0;
+          finalImageData.data[i + 3] = 255;
         } else {
-          finalImageData.data[i + 3] = 0; // A (transparent)
+          finalImageData.data[i + 3] = 0;
         }
       }
       finalCtx.putImageData(finalImageData, 0, 0);
 
-      // Create Fabric.js image
       const outlinedImage = new fabric.Image(finalCanvas, {
         left: originalImage.left,
         top: originalImage.top,
@@ -316,12 +293,10 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         opacity: 1.0,
       });
 
-      // Clear and rebuild the canvas
       fabricCanvas.current.clear();
       fabricCanvas.current.add(originalImage);
       fabricCanvas.current.add(outlinedImage);
 
-      // Restore other elements
       backgrounds.forEach((bg) => fabricCanvas.current?.add(bg));
       numbers.forEach((num) => fabricCanvas.current?.add(num));
 
@@ -339,7 +314,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       analyzeColorRegions(originalImage);
     };
 
-    // Helper to get outlined image data
     const getOutlinedImageData = (img: fabric.Image): ImageData => {
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d");
@@ -349,7 +323,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       tempCanvas.width = originalSize.width;
       tempCanvas.height = originalSize.height;
 
-      // Draw original image
       const imgElement = img.getElement();
       tempCtx.drawImage(
         imgElement,
@@ -359,7 +332,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         originalSize.height
       );
 
-      // Get image data and apply edge detection
       const imageData = tempCtx.getImageData(
         0,
         0,
@@ -375,7 +347,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       return new ImageData(edgeData, originalSize.width, originalSize.height);
     };
 
-    // Helper to get dominant color in an area
     const getDominantColor = (
       data: Uint8ClampedArray,
       width: number,
@@ -406,7 +377,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           const g = data[i + 1];
           const b = data[i + 2];
 
-          // Skip edge pixels
           if (r === 0 && g === 0 && b === 0) continue;
 
           const colorKey = `${r},${g},${b}`;
@@ -422,7 +392,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       return dominantColor;
     };
 
-    // Improved region finding with flood fill and better boundary detection
     const findEnclosedRegions = (
       data: Uint8ClampedArray,
       width: number,
@@ -435,7 +404,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         bounds: { minX: number; minY: number; maxX: number; maxY: number };
       }> = [];
 
-      // First pass to find edges (black pixels)
       const edgePixels = new Set<number>();
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -446,18 +414,15 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         }
       }
 
-      // Second pass to find enclosed regions with flood fill
       for (let y = 1; y < height - 1; y += 1) {
         for (let x = 1; x < width - 1; x += 1) {
           const index = y * width + x;
           if (!visited[index] && !edgePixels.has(index)) {
-            // Get the dominant color in this area (3x3 sample)
+
             const color = getDominantColor(data, width, x, y, 3);
 
-            // Skip white/very light areas
             if (color.r > 240 && color.g > 240 && color.b > 240) continue;
 
-            // Flood fill with queue and track boundaries
             const regionPoints: Array<{ x: number; y: number }> = [];
             let minX = width,
               maxX = 0,
@@ -471,7 +436,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
               const px = point.x;
               const py = point.y;
 
-              // Update bounds
               minX = Math.min(minX, px);
               maxX = Math.max(maxX, px);
               minY = Math.min(minY, py);
@@ -479,7 +443,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
 
               regionPoints.push({ x: px, y: py });
 
-              // Check 4-directional neighbors
               const neighbors = [
                 { x: px + 1, y: py },
                 { x: px - 1, y: py },
@@ -491,14 +454,12 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
                 const nx = neighbor.x;
                 const ny = neighbor.y;
 
-                // Check bounds
                 if (nx <= 0 || nx >= width - 1 || ny <= 0 || ny >= height - 1) {
                   continue;
                 }
 
                 const nIndex = ny * width + nx;
 
-                // Add to region if not edge and not visited
                 if (!edgePixels.has(nIndex) && !visited[nIndex]) {
                   visited[nIndex] = true;
                   queue.push(neighbor);
@@ -506,13 +467,11 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
               }
             }
 
-            // Only keep regions larger than a threshold and with reasonable aspect ratio
             if (regionPoints.length > 100) {
               const regionWidth = maxX - minX;
               const regionHeight = maxY - minY;
               const aspectRatio = regionWidth / regionHeight;
 
-              // Skip regions that are too narrow or too wide
               if (aspectRatio > 0.2 && aspectRatio < 5) {
                 regions.push({
                   color: `rgb(${color.r},${color.g},${color.b})`,
@@ -528,7 +487,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       return regions;
     };
 
-    // Analyze the image to find distinct color regions
     const analyzeColorRegions = (img: fabric.Image) => {
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d");
@@ -538,7 +496,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       tempCanvas.width = originalSize.width;
       tempCanvas.height = originalSize.height;
 
-      // Draw the original image to get color information
       const imgElement = img.getElement();
       tempCtx.drawImage(
         imgElement,
@@ -554,7 +511,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         originalSize.height
       );
 
-      // Get the outlined image data for edge detection
       const outlined = getOutlinedImageData(img);
       tempCtx.putImageData(outlined, 0, 0);
       const edgeData = tempCtx.getImageData(
@@ -564,7 +520,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         originalSize.height
       ).data;
 
-      // Combine original colors with edge data
       const combinedData = new Uint8ClampedArray(originalImageData.data);
       for (let i = 0; i < edgeData.length; i += 4) {
         if (edgeData[i] === 0) {
@@ -573,7 +528,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         }
       }
 
-      // Find enclosed regions in the outline
       const regions = findEnclosedRegions(
         combinedData,
         originalSize.width,
@@ -584,7 +538,6 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       generateNumbersForRegions(regions);
     };
 
-    // Improved number placement using centroid and distance transform
     const generateNumbersForRegions = (
       regions: Array<{
         color: string;
@@ -598,16 +551,13 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       const originalSize = img.getOriginalSize();
       const positions: Array<{ x: number; y: number; number: number }> = [];
 
-      // Sort regions by size (largest first)
       const sortedRegions = [...regions].sort(
         (a, b) => b.points.length - a.points.length
       );
 
       sortedRegions.forEach((region, index) => {
-        // Only process regions above a certain size threshold
         if (region.points.length < 150) return;
 
-        // Calculate the centroid of the region
         let sumX = 0,
           sumY = 0;
         region.points.forEach((point) => {
@@ -617,18 +567,15 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         const centroidX = sumX / region.points.length;
         const centroidY = sumY / region.points.length;
 
-        // Find the point in the region farthest from any edge (most central)
         let bestPoint = region.points[0];
         let maxDistance = 0;
 
         for (const point of region.points) {
-          // Calculate distance to bounds (approximate distance to edge)
           const distToLeft = point.x - region.bounds.minX;
           const distToRight = region.bounds.maxX - point.x;
           const distToTop = point.y - region.bounds.minY;
           const distToBottom = region.bounds.maxY - point.y;
 
-          // Use the minimum distance to any boundary as the score
           const minDistToBoundary = Math.min(
             distToLeft,
             distToRight,
@@ -636,12 +583,10 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
             distToBottom
           );
 
-          // Also consider distance to centroid for better centering
           const distToCentroid = Math.sqrt(
             Math.pow(point.x - centroidX, 2) + Math.pow(point.y - centroidY, 2)
           );
 
-          // Combined score favors points that are both central and far from edges
           const score = minDistToBoundary - distToCentroid * 0.2;
 
           if (score > maxDistance) {
@@ -664,11 +609,9 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       addNumbersToCanvas();
     };
 
-    // In the addNumbersToCanvas function, modify the text creation:
     const addNumbersToCanvas = () => {
       if (!fabricCanvas.current || !mainImageRef.current) return;
 
-      // Clear existing numbers and their backgrounds
       const existingNumbers = fabricCanvas.current
         .getObjects()
         .filter((obj) => obj.type === "text");
@@ -687,15 +630,14 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       const originalHeight = img.getOriginalSize().height;
 
       numberPositions.forEach((pos) => {
-        // Convert position from original image coordinates to canvas coordinates
+
         const x = imgLeft + (pos.x / originalWidth) * (img.width || 0) * imgScaleX;
         const y = imgTop + (pos.y / originalHeight) * (img.height || 0) * imgScaleY;
 
-        // Create a group for the number and its background
         const bgCircle = new fabric.Circle({
-          radius: 15,  // Slightly larger for easier selection
-          fill: 'rgba(0,0,0,0)',  // Fully transparent
-          stroke: 'rgba(0,0,0,0)',  // Fully transparent
+          radius: 15,
+          fill: 'rgba(0,0,0,0)', 
+          stroke: 'rgba(0,0,0,0)',
           originX: 'center',
           originY: 'center',
           selectable: true,
@@ -703,21 +645,20 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           hasBorders: false,
           name: 'number-bg',
           hoverCursor: 'move',
-          perPixelTargetFind: true  // Makes the transparent circle selectable
+          perPixelTargetFind: true
         });
 
         const text = new fabric.Text(pos.number.toString(), {
-          fontSize: 14,
+          fontSize: 12,
           fill: "black",
           fontFamily: "Arial",
-          fontWeight: "bold",
           originX: "center",
           originY: "center",
           selectable: true,
           hasControls: false,
           hasBorders: true,
           name: "number-text",
-          data: { number: pos.number }, // Store original number for reference
+          data: { number: pos.number },
         });
 
         const group = new fabric.Group([bgCircle, text], {
@@ -733,13 +674,12 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
           data: { number: pos.number },
         });
 
-        // Add event listeners for when the number is moved
         group.on("modified", () => {
           if (onNumbersGenerated) {
-            // Update the positions array with the new coordinates
+
             const updatedPositions = numberPositions.map((p) => {
               if (p.number === pos.number) {
-                // Convert back to original image coordinates
+
                 const originalX =
                   (((group.left! - imgLeft) / imgScaleX) * originalWidth) /
                   (img.width || originalWidth);
@@ -758,38 +698,30 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
         group.bringToFront();
       });
 
-      // Enable selection and movement of numbers
       fabricCanvas.current?.renderAll();
     };
 
-    // In the useEffect for image loading, modify the number handling:
     useEffect(() => {
       if (!fabricCanvas.current || !uploadedImage) return;
 
-      // Clear existing objects but preserve any manually positioned numbers
       const existingNumbers = fabricCanvas.current
         .getObjects()
         .filter((obj) => obj.name === "number-group");
 
       fabricCanvas.current.clear();
 
-      // Only re-add numbers if we're not preserving existing positions
       if (numberPositions.length === 0) {
         existingNumbers.forEach((num) => fabricCanvas.current?.add(num));
       }
 
       fabric.Image.fromURL(uploadedImage, (img) => {
         mainImageRef.current = img;
-        // ... rest of the image loading code ...
 
-        // Add numbers after image is loaded
         addNumbersToCanvas();
 
-        // ... rest of the code ...
       });
     }, [uploadedImage, isFrameEditable]);
 
-    // Add this new function to handle manual number addition:
     const addManualNumber = (position: { x: number; y: number }) => {
       if (!fabricCanvas.current || !mainImageRef.current) return;
 
@@ -810,14 +742,12 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       }
     };
 
-    // Modify the canvas setup to handle clicks for adding numbers:
     useEffect(() => {
       if (!fabricCanvas.current) return;
 
       const handleCanvasClick = (e: fabric.IEvent) => {
         if (e.target || !isFrameEditable) return;
 
-        // Add a new number at the clicked position
         const pointer = fabricCanvas.current?.getPointer(e.e);
         if (pointer) {
           addManualNumber({ x: pointer.x, y: pointer.y });
@@ -831,25 +761,22 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       };
     }, [isFrameEditable, numberPositions]);
 
-    // Debug function to visualize regions
     const visualizeRegions = (regions: typeof colorRegions) => {
       if (!fabricCanvas.current) return;
 
-      // Clear previous debug visuals
       fabricCanvas.current
         .getObjects()
         .filter((obj) => obj.name === "region-debug")
         .forEach((obj) => fabricCanvas.current?.remove(obj));
 
       regions.forEach((region) => {
-        // Create a polygon for the region (simplified)
         const points = region.points
-          .filter((_, i) => i % 10 === 0) // Sample points to reduce complexity
+          .filter((_, i) => i % 10 === 0)
           .map((p) => ({ x: p.x, y: p.y }));
 
         if (points.length > 2) {
           const poly = new fabric.Polygon(points, {
-            fill: region.color + "80", // Semi-transparent
+            fill: region.color + "80",
             stroke: "red",
             strokeWidth: 1,
             selectable: false,
@@ -863,11 +790,9 @@ const ImageCanvas = forwardRef<HTMLCanvasElement | null, ImageCanvasProps>(
       });
     };
 
-    // Handle image loading and updates
     useEffect(() => {
       if (!fabricCanvas.current || !uploadedImage) return;
 
-      // Clear existing objects except numbers and their backgrounds
       const existingNumbers = fabricCanvas.current
         .getObjects()
         .filter((obj) => obj.type === "text");

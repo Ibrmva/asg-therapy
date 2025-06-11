@@ -11,7 +11,6 @@
     margin-bottom: 0.5rem;
   }
 
-  /* for all social containers*/
   .socialContainer {
     width: 40px;
     height: 50px;
@@ -23,22 +22,17 @@
     transition-duration: 1.2s;
     border-radius: 15px 0 15px 0px;
   }
-  /* instagram*/
+
   .containerOne:hover {
     background-color: #d62976;
     transition-duration: 1.2s;
   }
-  /* twitter*/
-  .containerTwo:hover {
-    background-color: #00acee;
-    transition-duration: 1.2s;
-  }
-  /* linkdin*/
+
   .containerThree:hover {
     background-color: #0072b1;
     transition-duration: 1.2s;
   }
-  /* Whatsapp*/
+
   .containerFour:hover {
     background-color: #f90101;
     transition-duration: 1.2s;

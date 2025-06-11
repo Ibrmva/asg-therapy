@@ -11,7 +11,7 @@
 .editor-sidebar {
   position: absolute;
   top: 3rem;
-  left: -100%; /* Hide it off-screen initially */
+  left: -100%;
   width: 15%;
   height: 100vh;
   background-color: #282727;
@@ -19,17 +19,17 @@
   flex-direction: column;
   padding: 1rem;
   color: white;
-  transition: left 0.3s ease-in-out; /* Smooth sliding */
+  transition: left 0.3s ease-in-out;
   z-index: 1000;
   border-radius: 10px;
 }
 
 .editor-sidebar.show {
-  left: 0; /* Slide it in */
+  left: 0;
 }
 
 .hamburger-menu {
-  top: 5rem;
+  top: 6rem;
   left: 1rem;
   color: #0f0f0f;
   width: 40px;

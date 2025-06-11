@@ -16,6 +16,10 @@ interface NumberPosition {
   number: number;
 }
 
+interface FabricCanvasRef {
+  fabricCanvas: fabric.Canvas | null;
+}
+
 const Editor: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -119,35 +123,28 @@ const Editor: React.FC = () => {
     const canvas = fabricCanvasRef.current;
     if (!canvas || !uploadedImage) return;
   
-    // Get the Fabric.js canvas instance
     const fabricCanvas = (canvas as any).fabricCanvas as fabric.Canvas;
     if (!fabricCanvas) return;
   
-    // Create a temporary canvas for export
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
   
-    // Get all objects and calculate bounds
     const objects = fabricCanvas.getObjects();
     if (objects.length === 0) return;
   
-    // Calculate bounding box of all objects
     const { left, top, width, height } = calculateContentBounds(objects);
   
-    // Set dimensions with padding
     const padding = 20;
     tempCanvas.width = width + padding * 2;
     tempCanvas.height = height + padding * 2;
   
-    // Create a temporary fabric canvas for export
     const exportCanvas = new fabric.StaticCanvas(tempCanvas, {
       width: tempCanvas.width,
       height: tempCanvas.height,
       backgroundColor: '#ffffff'
     });
   
-    // Clone and position objects
     objects.forEach(obj => {
       const clonedObj = fabric.util.object.clone(obj);
       clonedObj.set({
@@ -159,19 +156,16 @@ const Editor: React.FC = () => {
   
     exportCanvas.renderAll();
   
-    // Create PDF
     const doc = new jsPDF({
       orientation: width > height ? "landscape" : "portrait",
       unit: "px",
       format: [tempCanvas.width, tempCanvas.height]
     });
   
-    // Add to PDF and save
     doc.addImage(tempCanvas.toDataURL('image/png'), 'PNG', 0, 0, tempCanvas.width, tempCanvas.height);
     doc.save("coloring-page.pdf");
   };
   
-  // Helper function to calculate content bounds
   const calculateContentBounds = (objects: fabric.Object[]) => {
     const boundingRect = {
       left: Infinity,
